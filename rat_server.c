@@ -32,13 +32,17 @@ _send_response(int c_socket)
 static rat_connection*
 _create_connection(rat_conf *conf)
 {
+	int on = 1;
 	rat_connection *conn;
+
 	conn = (rat_connection*)malloc(sizeof(rat_connection));
 
 	conn->s_sock = socket(AF_INET, SOCK_STREAM, 0);
 	conn->s_addr.sin_family = AF_INET;
 	conn->s_addr.sin_port = htons(conf->port);
 	conn->s_addr.sin_addr.s_addr = INADDR_ANY;
+	ioctl(conn->s_sock, FIONBIO, &on);
+	fcntl(conn->s_sock, F_SETFD, FD_CLOEXEC);
 	conn->conf = conf;
 
 	return conn;
@@ -69,11 +73,8 @@ _create_event(int sock)
 static int
 _server_loop(rat_connection *conn)
 {
-	int on = 1;
 	rat_event *e;
 	e = _create_event(conn->s_sock);
-	ioctl(conn->s_sock, FIONBIO, &on);
-	fcntl(conn->s_sock, F_SETFD, FD_CLOEXEC);
 
 	char read_buffer[1024];
 	int i, nfds, c_len;
