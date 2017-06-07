@@ -11,6 +11,7 @@ typedef struct {
 	char *host;
 	char *protocol;
 	uint16_t backlog;
+    int socket_reuse;
 } rat_conf;
 
 char *
@@ -52,27 +53,20 @@ read_config(char *path)
 	conf = (rat_conf *)malloc(sizeof(rat_conf));
 
 	f = fopen(path, "rt");
-	while(fgets(buf, 1024, f)) {
+	while (fgets(buf, 1024, f)) {
 		token = strtok_r(buf, " ", &cptr);
 		if (!strcmp(token, "#")) {
-			printf("this is comment.\n");
-			continue;
-		}
-		if (!strcmp(token, "host")) {
+            // skip comment section.
+		} else if (!strcmp(token, "host")) {
 			conf->host = conf_handler_string(strtok_r(NULL, "", &cptr));
-			continue;
-		}
-		if (!strcmp(token, "port")) {
+		} else if (!strcmp(token, "port")) {
 			conf->port = conf_handler_int(strtok_r(NULL, "", &cptr));
-			continue;
-		}
-                if (!strcmp(token, "protocol")) {
+		} else if (!strcmp(token, "protocol")) {
 			conf->protocol = conf_handler_string(strtok_r(NULL, "", &cptr));
-			continue;
-		}
-                if (!strcmp(token, "backlog")) {
+		} else if (!strcmp(token, "backlog")) {
 			conf->backlog = conf_handler_int(strtok_r(NULL, "", &cptr));
-			continue;
+		} else if (!strcmp(token, "socket_reuse")) {
+			conf->socket_reuse = conf_handler_int(strtok_r(NULL, "", &cptr));
 		}
 	}
 
@@ -82,26 +76,44 @@ read_config(char *path)
 int
 open_socket(rat_conf *conf)
 {
-	int r_socket;
-	int w_socket;
-	struct sockaddr_in addr;
-	struct sockaddr_in client;
-	int len;
+	int server_socket, client_socket;
+    int server_len, client_len;
+    int read_size;
+	struct sockaddr_in server_addr, client_addr;
+    const int yes = 1;
 
-	r_socket = socket(AF_INET, SOCK_STREAM, 0);
+	server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(conf->port);
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+    if (conf->socket_reuse == 1) {
+        setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
+        printf("reuse option.\n");
+    }
+	bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	listen(server_socket, conf->backlog);
 
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(conf->port);
-	addr.sin_addr.s_addr = INADDR_ANY;
-	bind(r_socket, (struct sockaddr *)&addr, sizeof(addr));
-	listen(r_socket, conf->backlog);
+    while (1) {
+        char read_buffer[1024];
+        memset(read_buffer, 0, sizeof(read_buffer));
 
-	len = sizeof(client);
-	w_socket = accept(r_socket, (struct sockaddr *)&client, &len);
-	write(w_socket, "HELLO", 5);
+        client_len = sizeof(client_addr);
+        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_len);
+        if (client_socket == -1) {
+            printf("failed open socket.\n");
+            return -1;
+        }
 
-	close(w_socket);
-	close(r_socket);
+        read_size = read(client_socket, read_buffer, sizeof(read_buffer));
+        if (read_size == -1) {
+            printf("failed read socket.\n");
+            return -1;
+        }
+        printf("%s\n", read_buffer);
+    }
+
+	close(server_socket);
+	close(client_socket);
 
 	return 0;
 }
@@ -126,6 +138,7 @@ main(int argc, char *argv[])
 	printf("%d\n", conf->port);
 	printf("%s\n", conf->protocol);
 	printf("%d\n", conf->backlog);
+	printf("%d\n", conf->socket_reuse);
 
 	return 0;
 }
