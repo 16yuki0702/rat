@@ -88,11 +88,18 @@ open_socket(rat_conf *conf)
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	if (conf->socket_reuse == 1) {
 		setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
-		printf("reuse option.\n");
 	}
-	bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	listen(server_socket, conf->backlog);
 
+	if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
+		printf("failed bind socket.\n");
+		return -1;
+	}
+
+	if (listen(server_socket, conf->backlog) != 0) {
+		printf("failed listen socket.\n");
+		return -1;
+	}
+	
 	while (1) {
 		char read_buffer[1024];
 		memset(read_buffer, 0, sizeof(read_buffer));
