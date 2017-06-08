@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+static int conf_error = 0;
+
 typedef struct {
 	uint16_t port;
 	char *host;
@@ -14,8 +16,8 @@ typedef struct {
 	int socket_reuse;
 } rat_conf;
 
-char *
-conf_handler_string(const char *param)
+void
+conf_handler_string(char **conf, const char *param)
 {
 	char *ret;
 	int len;
@@ -27,17 +29,27 @@ conf_handler_string(const char *param)
 		ret[len - 1] = '\0';
 	}
 
-	return ret;
+	*conf = ret;
 }
 
-int
-conf_handler_int(const char *param)
+void
+conf_handler_int(int *conf, const char *param)
 {
 	int ret;
 
 	ret = atoi(param);
 
-	return ret;
+	*conf = ret;
+}
+
+void
+conf_handler_uint16(uint16_t *conf, const char *param)
+{
+	uint16_t ret;
+
+	ret = atoi(param);
+
+	*conf = ret;
 }
 
 rat_conf *
@@ -58,15 +70,15 @@ read_config(char *path)
 		if (!strcmp(token, "#")) {
 			// skip comment section.
 		} else if (!strcmp(token, "host")) {
-			conf->host = conf_handler_string(strtok_r(NULL, "", &cptr));
+			conf_handler_string(&conf->host, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "port")) {
-			conf->port = conf_handler_int(strtok_r(NULL, "", &cptr));
+			conf_handler_uint16(&conf->port, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "protocol")) {
-			conf->protocol = conf_handler_string(strtok_r(NULL, "", &cptr));
+			conf_handler_string(&conf->protocol, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "backlog")) {
-			conf->backlog = conf_handler_int(strtok_r(NULL, "", &cptr));
+			conf_handler_uint16(&conf->backlog, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "socket_reuse")) {
-			conf->socket_reuse = conf_handler_int(strtok_r(NULL, "", &cptr));
+			conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
 		}
 	}
 
@@ -138,6 +150,10 @@ main(int argc, char *argv[])
 
 	conf_path = argv[1];
 	conf = read_config(conf_path);
+
+	if (conf_error) {
+		printf("please review config file. there is error config.\n");
+	}
 
 	open_socket(conf);
 	
