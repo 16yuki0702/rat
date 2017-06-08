@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "http.h"
 
 static int conf_error = 0;
 
@@ -129,10 +130,13 @@ open_socket(rat_conf *conf)
 			return -1;
 		}
 		printf("%s\n", read_buffer);
+
+		write(client_socket, HTTP_200_RES, strlen(HTTP_200_RES));
+
+		close(client_socket);
 	}
 
 	close(server_socket);
-	close(client_socket);
 
 	return 0;
 }
