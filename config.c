@@ -1,16 +1,9 @@
 #include "config.h"
 
+rat_conf *conf;
 static int conf_error = 0;
 
-typedef struct {
-	uint16_t port;
-	char *host;
-	char *protocol;
-	uint16_t backlog;
-	int socket_reuse;
-} rat_conf;
-
-void
+static void
 conf_handler_string(char **conf, const char *param)
 {
 	char *ret;
@@ -26,7 +19,7 @@ conf_handler_string(char **conf, const char *param)
 	*conf = ret;
 }
 
-void
+static void
 conf_handler_int(int *conf, const char *param)
 {
 	int ret;
@@ -36,7 +29,7 @@ conf_handler_int(int *conf, const char *param)
 	*conf = ret;
 }
 
-void
+static void
 conf_handler_uint16(uint16_t *conf, const char *param)
 {
 	uint16_t ret;
@@ -56,6 +49,7 @@ _read_config(char *path)
 	char *cptr;
 
 	conf = (rat_conf *)malloc(sizeof(rat_conf));
+	memset(conf, 0, sizeof(conf));
 
 	f = fopen(path, "rt");
 	while (fgets(buf, 1024, f)) {

@@ -1,3 +1,11 @@
+#ifndef RAT_CONFIG_H
+#define RAT_CONFIG_H
+
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+
 typedef struct {
 	uint16_t port;
 	char *host;
@@ -8,7 +16,6 @@ typedef struct {
 
 extern rat_conf *conf;
 
-extern void conf_handler_string(char **conf, const char *param);
-extern void conf_handler_int(int *conf, const char *param);
-extern void conf_handler_uint16(uint16_t *conf, const char *param);
-extern int *read_config(char *path);
+extern int read_config(char *path);
+
+#endif
