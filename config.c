@@ -66,6 +66,8 @@ _read_config(char *path)
 			conf_handler_uint16(&conf->backlog, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "socket_reuse")) {
 			conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "use_epoll")) {
+			conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
 		}
 	}
 }

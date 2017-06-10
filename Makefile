@@ -13,3 +13,6 @@ $(PROG): $(OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+
+clean:
+	rm -rf *.o

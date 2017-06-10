@@ -12,6 +12,7 @@ typedef struct {
 	char *protocol;
 	uint16_t backlog;
 	int socket_reuse;
+	int use_epoll;
 } rat_conf;
 
 extern rat_conf *conf;
