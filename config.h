@@ -13,6 +13,7 @@ typedef struct {
 	uint16_t backlog;
 	int socket_reuse;
 	int use_epoll;
+	int non_blocking;
 } rat_conf;
 
 extern rat_conf *conf;

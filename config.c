@@ -68,6 +68,8 @@ _read_config(char *path)
 			conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "use_epoll")) {
 			conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "non_blocking")) {
+			conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
 		}
 	}
 }

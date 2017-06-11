@@ -13,7 +13,7 @@ _open_socket(rat_conf *conf)
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(conf->port);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	if (conf->socket_reuse == 1) {
+	if (conf->socket_reuse) {
 		setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
 	}
 
@@ -25,6 +25,10 @@ _open_socket(rat_conf *conf)
 	if (listen(server_socket, conf->backlog) != 0) {
 		printf("failed listen socket.\n");
 		return -1;
+	}
+
+	if (conf->non_blocking) {
+		ioctl(server_socket, FIONBIO, &conf->non_blocking);
 	}
 	
 	while (1) {
@@ -71,7 +75,7 @@ _open_socket_epoll(rat_conf *conf)
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(conf->port);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	if (conf->socket_reuse == 1) {
+	if (conf->socket_reuse) {
 		setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
 	}
 	if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) != 0) {
@@ -82,6 +86,10 @@ _open_socket_epoll(rat_conf *conf)
 	if (listen(server_socket, conf->backlog) != 0) {
 		printf("failed listen socket.\n");
 		return -1;
+	}
+
+	if (conf->non_blocking) {
+		ioctl(server_socket, FIONBIO, &conf->non_blocking);
 	}
 
 	epfd = epoll_create(NEVENTS);
