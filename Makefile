@@ -1,7 +1,7 @@
 CC		= gcc
 CLFAGS		= -Wall -O4
 PROG		= rat
-SOURCES		= server.c config.c main.c
+SOURCES		= http.c server.c config.c main.c
 OBJS		= $(SOURCES:.c=.o)
 
 .PHONY: all

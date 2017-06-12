@@ -131,7 +131,7 @@ _open_socket_epoll(rat_conf *conf)
 					printf("failed read socket.\n");
 					return -1;
 				}
-				printf("%s\n", read_buffer);
+				http_request_parse(read_buffer);
 
 				write(client_socket, HTTP_200_RES, strlen(HTTP_200_RES));
 
