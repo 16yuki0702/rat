@@ -2,6 +2,7 @@
 #define RAT_HTTP_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define HTTP_200_RES "" 		\
 	"HTTP/1.1 200 OK \r\n" 		\
@@ -18,6 +19,6 @@ typedef struct {
 	char *accept_language;
 } http_request;
 
-extern void http_request_parse(char *request_line);
+extern http_request http_request_parse(char *request_line);
 
 #endif
