@@ -1,5 +1,7 @@
 #include "http.h"
 
+http_request *rat_request;
+
 static char*
 substr(char const *str, int start, int end)
 {
@@ -35,11 +37,31 @@ strcmp_substr(char const *src, char const *dst, int start, int end)
 	return ret;
 }
 
+static char*
+_parse_header_line(char *request_line)
+{
+	char *token;
+	char *cptr;
+
+	rat_request->method = strtok_r(request_line, " ", &cptr);
+	rat_request->uri = strtok_r(NULL, " ", &cptr);
+	strtok_r(NULL, "/", &cptr);
+	rat_request->version = strtok_r(NULL, "\n", &cptr);
+}
+
 http_request
 http_request_parse(char *request_line)
 {
-	http_request *request;
-	request = calloc(1, sizeof(http_request));
+	char *cp;
+	cp = strdup(request_line);
 
-	strcmp_substr(request_line, "GET", 0, 3);
+	rat_request = calloc(1, sizeof(http_request));
+
+	_parse_header_line(cp);
+
+	printf("%s\n", rat_request->method);
+	printf("%s\n", rat_request->uri);
+	printf("%s\n", rat_request->version);
+
+	//printf("request %s\n", request_line);
 }
