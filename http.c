@@ -37,7 +37,7 @@ strcmp_substr(char const *src, char const *dst, int start, int end)
 	return ret;
 }
 
-static char*
+static void
 _parse_header_line(char *request_line)
 {
 	char *token;
@@ -49,7 +49,7 @@ _parse_header_line(char *request_line)
 	rat_request->version = strtok_r(NULL, "\n", &cptr);
 }
 
-http_request
+void
 http_request_parse(char *request_line)
 {
 	char *cp;

@@ -24,6 +24,6 @@ typedef struct {
 
 extern http_request *rat_request;
 
-extern http_request http_request_parse(char *request_line);
+extern void http_request_parse(char *request_line);
 
 #endif
