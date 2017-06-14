@@ -2,6 +2,41 @@
 
 http_request *rat_request;
 
+static void
+_dump_request(void)
+{
+	if (rat_request->method) printf("%s\n", rat_request->method);
+	if (rat_request->uri) printf("%s\n", rat_request->uri);
+	if (rat_request->version) printf("%s\n", rat_request->version);
+	if (rat_request->host) printf("%s\n", rat_request->host);
+	if (rat_request->connection) printf("%s\n", rat_request->connection);
+	if (rat_request->upgrade_insecure_requests) printf("%d\n", rat_request->upgrade_insecure_requests);
+	if (rat_request->user_agent) printf("%s\n", rat_request->user_agent);
+	if (rat_request->accept) printf("%s\n", rat_request->accept);
+	if (rat_request->accept_encoding) printf("%s\n", rat_request->accept_encoding);
+	if (rat_request->accept_language) printf("%s\n", rat_request->accept_language);
+}
+
+static void
+_set_request_parameter(char *key, char *value)
+{
+	if (!strcmp(key, "Host")) {
+		rat_request->host = value;
+	} else if (!strcmp(key, "Connection")) {
+		rat_request->connection = value;
+	} else if (!strcmp(key, "Upgrade-Insecure-Requests")) {
+		rat_request->upgrade_insecure_requests = atoi(value);
+	} else if (!strcmp(key, "User-Agent")) {
+		rat_request->user_agent = value;
+	} else if (!strcmp(key, "Accept")) {
+		rat_request->accept = value;
+	} else if (!strcmp(key, "Accept-Encoding")) {
+		rat_request->accept_encoding = value;
+	} else if (!strcmp(key, "Accept-Language")) {
+		rat_request->accept_language = value;
+	}
+}
+
 static char*
 substr(char const *str, int start, int end)
 {
@@ -37,7 +72,7 @@ strcmp_substr(char const *src, char const *dst, int start, int end)
 	return ret;
 }
 
-static void
+static char*
 _parse_header_line(char *request_line)
 {
 	char *token;
@@ -47,21 +82,42 @@ _parse_header_line(char *request_line)
 	rat_request->uri = strtok_r(NULL, " ", &cptr);
 	strtok_r(NULL, "/", &cptr);
 	rat_request->version = strtok_r(NULL, "\n", &cptr);
+
+	return cptr;
+}
+
+static void
+_parse_header_body(char *request_line)
+{
+	char *token;
+	char *cptr;
+
+	printf("%s\n", request_line);
+
+	token = strtok_r(request_line, ":", &cptr);
+
+	if (!token) {
+		return;	
+	}
+
+	do {
+		printf("%s\n", token);	
+		token = strtok_r(NULL, ":", &cptr);
+	} while (token);
 }
 
 void
 http_request_parse(char *request_line)
 {
 	char *cp;
+	char *cptr;
+
 	cp = strdup(request_line);
 
 	rat_request = calloc(1, sizeof(http_request));
 
-	_parse_header_line(cp);
+	cptr = _parse_header_line(cp);
+	_parse_header_body(cptr);
 
-	printf("%s\n", rat_request->method);
-	printf("%s\n", rat_request->uri);
-	printf("%s\n", rat_request->version);
-
-	//printf("request %s\n", request_line);
+	_dump_request();
 }
