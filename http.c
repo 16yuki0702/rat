@@ -2,6 +2,17 @@
 
 http_request *rat_request;
 
+static char*
+_ltrim(char *str)
+{
+	while (*str == 0x20) {
+		printf("%s\n", str);
+		str++;
+	}
+
+	return str;
+}
+
 static void
 _dump_request(void)
 {
@@ -20,6 +31,7 @@ _dump_request(void)
 static void
 _set_request_parameter(char *key, char *value)
 {
+	value = _ltrim(value);
 	if (!strcmp(key, "Host")) {
 		rat_request->host = value;
 	} else if (!strcmp(key, "Connection")) {
@@ -89,21 +101,25 @@ _parse_header_line(char *request_line)
 static void
 _parse_header_body(char *request_line)
 {
-	char *token;
+	char *key;
+	char *value;
 	char *cptr;
 
-	printf("%s\n", request_line);
+	key = strtok_r(request_line, ":", &cptr);
 
-	token = strtok_r(request_line, ":", &cptr);
-
-	if (!token) {
+	if (!key) {
 		return;	
 	}
 
 	do {
-		printf("%s\n", token);	
-		token = strtok_r(NULL, ":", &cptr);
-	} while (token);
+		value = strtok_r(NULL, "\n", &cptr);
+		_set_request_parameter(key, value);
+		if (!cptr) {
+			break;
+		}
+
+		key = strtok_r(NULL, ":", &cptr);
+	} while (key);
 }
 
 void

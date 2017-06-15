@@ -23,11 +23,5 @@ main(int argc, char *argv[])
 
 	open_socket(conf);
 	
-	printf("%s\n", conf->host);
-	printf("%d\n", conf->port);
-	printf("%s\n", conf->protocol);
-	printf("%d\n", conf->backlog);
-	printf("%d\n", conf->socket_reuse);
-
 	return 0;
 }
