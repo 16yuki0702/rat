@@ -2,36 +2,44 @@
 
 http_request *rat_request;
 
-static char*
-_ltrim(char *str)
+static void
+_trim(char *str)
 {
-	while (*str == 0x20) {
-		printf("%s\n", str);
-		str++;
+	int i;
+	if (str == NULL) {
+		return;
 	}
 
-	return str;
+	i = strlen(str);
+
+	while (--i >= 0 && str[i] == ' ');
+
+	str[i + 1] = '\0';
+
+	i = 0;
+	while (str[i] != '\0' && str[i] == ' ') i++;
+	strcpy(str, &str[i]);
 }
 
 static void
 _dump_request(void)
 {
-	if (rat_request->method) printf("%s\n", rat_request->method);
-	if (rat_request->uri) printf("%s\n", rat_request->uri);
-	if (rat_request->version) printf("%s\n", rat_request->version);
-	if (rat_request->host) printf("%s\n", rat_request->host);
-	if (rat_request->connection) printf("%s\n", rat_request->connection);
-	if (rat_request->upgrade_insecure_requests) printf("%d\n", rat_request->upgrade_insecure_requests);
-	if (rat_request->user_agent) printf("%s\n", rat_request->user_agent);
-	if (rat_request->accept) printf("%s\n", rat_request->accept);
-	if (rat_request->accept_encoding) printf("%s\n", rat_request->accept_encoding);
-	if (rat_request->accept_language) printf("%s\n", rat_request->accept_language);
+	if (rat_request->method) printf("method:%s\n", rat_request->method);
+	if (rat_request->uri) printf("uri:%s\n", rat_request->uri);
+	if (rat_request->version) printf("version:%s\n", rat_request->version);
+	if (rat_request->host) printf("host:%s\n", rat_request->host);
+	if (rat_request->connection) printf("connection:%s\n", rat_request->connection);
+	if (rat_request->upgrade_insecure_requests) printf("upgrade_insecure_requests:%d\n", rat_request->upgrade_insecure_requests);
+	if (rat_request->user_agent) printf("user_agent:%s\n", rat_request->user_agent);
+	if (rat_request->accept) printf("accept:%s\n", rat_request->accept);
+	if (rat_request->accept_encoding) printf("accept_encoding:%s\n", rat_request->accept_encoding);
+	if (rat_request->accept_language) printf("accept_language:%s\n", rat_request->accept_language);
 }
 
 static void
 _set_request_parameter(char *key, char *value)
 {
-	value = _ltrim(value);
+	_trim(value);
 	if (!strcmp(key, "Host")) {
 		rat_request->host = value;
 	} else if (!strcmp(key, "Connection")) {

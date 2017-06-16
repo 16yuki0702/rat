@@ -15,7 +15,7 @@ typedef struct {
 	char *version;
 	char *host;
 	char *connection;
-	int upgrade_insecure_requests:1;
+	int upgrade_insecure_requests;
 	char *user_agent;
 	char *accept;
 	char *accept_encoding;
