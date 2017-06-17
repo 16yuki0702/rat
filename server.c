@@ -1,4 +1,7 @@
 #include "server.h"
+#include "http.h"
+
+http_request *rat_request;
 
 static int
 _open_socket(rat_conf *conf)
@@ -132,6 +135,24 @@ _open_socket_epoll(rat_conf *conf)
 					return -1;
 				}
 				http_request_parse(read_buffer);
+
+				if (!strcmp(rat_request->uri, "/")) {
+					char file_buffer[1024];
+					FILE *fp;
+
+					fp = fopen("index.html", "r");
+					if (fp == NULL) {
+						printf("can't open file\n");
+						continue;
+					}
+
+					fgets(file_buffer, 1024, fp);
+					write(client_socket, file_buffer, strlen(file_buffer));
+
+					close(client_socket);
+
+					continue;
+				}
 
 				write(client_socket, HTTP_200_RES, strlen(HTTP_200_RES));
 
