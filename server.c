@@ -146,8 +146,9 @@ _open_socket_epoll(rat_conf *conf)
 						continue;
 					}
 
-					fgets(file_buffer, 1024, fp);
-					write(client_socket, file_buffer, strlen(file_buffer));
+					while (fgets(file_buffer, 1024, fp)) {
+						write(client_socket, file_buffer, strlen(file_buffer));
+					}
 
 					close(client_socket);
 
