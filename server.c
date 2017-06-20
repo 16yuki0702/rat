@@ -64,6 +64,35 @@ _open_socket(rat_conf *conf)
 
 #define NEVENTS 16
 
+static void
+_send_response(int c_socket)
+{
+	char *filepath;
+
+	if (!strcmp(rat_request->uri, "/")) {
+		filepath = "index.html";
+	} else {
+		filepath = rat_request->uri;
+	}
+	
+	char file_buffer[1024];
+	FILE *fp;
+
+	fp = fopen(filepath, "r");
+	if (fp == NULL) {
+		write(c_socket, HTTP_404_RES, strlen(HTTP_404_RES));
+		close(c_socket);
+		return;
+	}
+
+	write(c_socket, HTTP_200_RES, strlen(HTTP_200_RES));
+	while (fgets(file_buffer, 1024, fp)) {
+		write(c_socket, file_buffer, strlen(file_buffer));
+	}
+
+	close(c_socket);
+}
+
 static int
 _open_socket_epoll(rat_conf *conf)
 {
@@ -136,28 +165,7 @@ _open_socket_epoll(rat_conf *conf)
 				}
 				http_request_parse(read_buffer);
 
-				if (!strcmp(rat_request->uri, "/")) {
-					char file_buffer[1024];
-					FILE *fp;
-
-					fp = fopen("index.html", "r");
-					if (fp == NULL) {
-						printf("can't open file\n");
-						continue;
-					}
-
-					while (fgets(file_buffer, 1024, fp)) {
-						write(client_socket, file_buffer, strlen(file_buffer));
-					}
-
-					close(client_socket);
-
-					continue;
-				}
-
-				write(client_socket, HTTP_200_RES, strlen(HTTP_200_RES));
-
-				close(client_socket);
+				_send_response(client_socket);
 			}
 		}
 	}

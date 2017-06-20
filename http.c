@@ -143,5 +143,5 @@ http_request_parse(char *request_line)
 	cptr = _parse_header_line(cp);
 	_parse_header_body(cptr);
 
-	_dump_request();
+	//_dump_request();
 }
