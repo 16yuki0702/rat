@@ -4,7 +4,18 @@ rat_conf *conf;
 static int conf_error = 0;
 
 static void
-conf_handler_string(char **conf, const char *param)
+_dump_config(void)
+{
+	printf("port : %d\n",		conf->port);
+	printf("host : %s\n",		conf->host);
+	printf("protocol : %s\n",	conf->protocol);
+	printf("backlog : %d\n", 	conf->backlog);
+	printf("socket_reuse : %d\n", 	conf->socket_reuse);
+	printf("use_epoll : %d\n", 	conf->use_epoll);
+}
+
+static void
+_conf_handler_string(char **conf, const char *param)
 {
 	char *ret;
 	int len;
@@ -20,7 +31,7 @@ conf_handler_string(char **conf, const char *param)
 }
 
 static void
-conf_handler_int(int *conf, const char *param)
+_conf_handler_int(int *conf, const char *param)
 {
 	int ret;
 
@@ -30,7 +41,7 @@ conf_handler_int(int *conf, const char *param)
 }
 
 static void
-conf_handler_uint16(uint16_t *conf, const char *param)
+_conf_handler_uint16(uint16_t *conf, const char *param)
 {
 	uint16_t ret;
 
@@ -57,19 +68,17 @@ _read_config(char *path)
 		if (!strcmp(token, "#")) {
 			// skip comment section.
 		} else if (!strcmp(token, "host")) {
-			conf_handler_string(&conf->host, strtok_r(NULL, "", &cptr));
+			_conf_handler_string(&conf->host, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "port")) {
-			conf_handler_uint16(&conf->port, strtok_r(NULL, "", &cptr));
+			_conf_handler_uint16(&conf->port, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "protocol")) {
-			conf_handler_string(&conf->protocol, strtok_r(NULL, "", &cptr));
+			_conf_handler_string(&conf->protocol, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "backlog")) {
-			conf_handler_uint16(&conf->backlog, strtok_r(NULL, "", &cptr));
+			_conf_handler_uint16(&conf->backlog, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "socket_reuse")) {
-			conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
+			_conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "use_epoll")) {
-			conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
-		} else if (!strcmp(token, "non_blocking")) {
-			conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
+			_conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
 		}
 	}
 }
@@ -83,6 +92,8 @@ read_config(char *path)
 		printf("config error.\n");
 		return -1;
 	}
+
+	//_dump_config();
 
 	return 0;
 }

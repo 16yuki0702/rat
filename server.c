@@ -120,6 +120,7 @@ _epoll_loop(int s_socket)
 				printf("failed read socket.\n");
 				return -1;
 			}
+
 			http_request_parse(read_buffer);
 
 			_send_response(c_socket);
@@ -143,9 +144,11 @@ open_socket(rat_conf *conf)
 	s_addr.sin_family = AF_INET;
 	s_addr.sin_port = htons(conf->port);
 	s_addr.sin_addr.s_addr = INADDR_ANY;
+
 	if (conf->socket_reuse) {
 		setsockopt(s_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
 	}
+
 	if (bind(s_socket, (struct sockaddr *)&s_addr, sizeof(s_addr)) != 0) {
 		printf("failed bind socket.\n");
 		return -1;
@@ -156,11 +159,10 @@ open_socket(rat_conf *conf)
 		return -1;
 	}
 
-	if (conf->non_blocking) {
-		ioctl(s_socket, FIONBIO, &conf->non_blocking);
-	}
-
 	if (conf->use_epoll) {
+		
+		ioctl(s_socket, FIONBIO, &conf->use_epoll);
+		
 		return _epoll_loop(s_socket);
 	} else {
 		return _normal_loop(s_socket);
