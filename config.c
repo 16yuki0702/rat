@@ -31,9 +31,30 @@ _conf_handler_string(char **conf, const char *param)
 }
 
 static void
+_check_number(const char *param)
+{
+	char *str = (char *)param;;
+
+	do {
+
+		if (*str >= '0' && *str <= '9') {
+			continue;
+		} else if (*str == '\r' || *str == '\n' || *str == '\0') {
+			continue;
+		}
+
+		conf_error = 1;
+		break;
+
+	} while (*str++);
+}
+
+static void
 _conf_handler_int(int *conf, const char *param)
 {
 	int ret;
+
+	_check_number(param);
 
 	ret = atoi(param);
 
@@ -44,6 +65,8 @@ static void
 _conf_handler_uint16(uint16_t *conf, const char *param)
 {
 	uint16_t ret;
+
+	_check_number(param);
 
 	ret = atoi(param);
 

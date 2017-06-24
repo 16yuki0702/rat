@@ -19,6 +19,7 @@ main(int argc, char *argv[])
 
 	if (error_code) {
 		printf("please review config file. there is error config.\n");
+		return -1;
 	}
 
 	open_socket(conf);
