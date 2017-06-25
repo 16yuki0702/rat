@@ -1,7 +1,7 @@
 #include "config.h"
 
 rat_conf *conf;
-static int conf_error = 0;
+config_detail conf_error;
 
 static void
 _dump_config(void)
@@ -43,7 +43,8 @@ _check_number(const char *param)
 			continue;
 		}
 
-		conf_error = 1;
+		conf_error.r_code = 1;
+		conf_error.r_message = "int type config is not number.";
 		break;
 
 	} while (*str++);
@@ -109,10 +110,13 @@ _read_config(char *path)
 int
 read_config(char *path)
 {
+	conf_error.r_code = 0;
+	conf_error.r_message = "no error.";
+
 	_read_config(path);
 
-	if (conf_error) {
-		printf("config error.\n");
+	if (conf_error.r_code) {
+		printf("config error : %s\n", conf_error.r_message);
 		return -1;
 	}
 

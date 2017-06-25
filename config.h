@@ -15,6 +15,11 @@ typedef struct {
 	int use_epoll;
 } rat_conf;
 
+typedef struct {
+	int r_code;
+	char *r_message;
+} config_detail;
+
 extern rat_conf *conf;
 
 extern int read_config(char *path);
