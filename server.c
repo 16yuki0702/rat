@@ -56,11 +56,10 @@ _normal_loop(int s_socket)
 			printf("failed read socket.\n");
 			return -1;
 		}
-		printf("%s\n", read_buffer);
 
-		write(c_socket, HTTP_200_RES, strlen(HTTP_200_RES));
+		http_request_parse(read_buffer);
 
-		close(c_socket);
+		_send_response(c_socket);
 	}
 
 	close(s_socket);
