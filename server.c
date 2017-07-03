@@ -34,24 +34,29 @@ _send_response(int c_socket)
 	close(c_socket);
 }
 
+typedef struct {
+	struct sockaddr_in addr;
+	int sock;
+} rat_connection;
+
 static int
 _normal_loop(int s_socket)
 {
-	struct sockaddr_in c_addr;
-	int c_socket, c_len, read_size;
+	rat_connection conn;
+	int c_len, read_size;
 
 	while (1) {
 		char read_buffer[1024];
 		memset(read_buffer, 0, sizeof(read_buffer));
 
-		c_len = sizeof(c_addr);
-		c_socket = accept(s_socket, (struct sockaddr *)&c_addr, &c_len);
-		if (c_socket == -1) {
+		c_len = sizeof(conn.addr);
+		conn.sock = accept(s_socket, (struct sockaddr *)&conn.addr, &c_len);
+		if (conn.sock == -1) {
 			printf("failed open socket.\n");
 			return -1;
 		}
 
-		read_size = read(c_socket, read_buffer, sizeof(read_buffer));
+		read_size = read(conn.sock, read_buffer, sizeof(read_buffer));
 		if (read_size == -1) {
 			printf("failed read socket.\n");
 			return -1;
@@ -59,7 +64,7 @@ _normal_loop(int s_socket)
 
 		http_request_parse(read_buffer);
 
-		_send_response(c_socket);
+		_send_response(conn.sock);
 	}
 
 	close(s_socket);
