@@ -52,7 +52,7 @@ static int
 _normal_loop(int s_socket)
 {
 	rat_connection *conn;
-	int c_len, read_size;
+	int c_len;
 	conn = _create_connection();
 
 	while (1) {
@@ -60,14 +60,12 @@ _normal_loop(int s_socket)
 		memset(read_buffer, 0, sizeof(read_buffer));
 
 		c_len = sizeof(conn->addr);
-		conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len);
-		if (conn->sock == -1) {
+		if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
 			printf("failed open socket.\n");
 			return -1;
 		}
 
-		read_size = read(conn->sock, read_buffer, sizeof(read_buffer));
-		if (read_size == -1) {
+		if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
 			printf("failed read socket.\n");
 			return -1;
 		}
@@ -107,7 +105,7 @@ _epoll_loop(int s_socket)
 	int flg = 0;
 	int i, n, nfds;
 	rat_connection *conn;
-	int c_len, read_size;
+	int c_len;
 	conn = _create_connection();
 
 	while (1) {
@@ -126,14 +124,12 @@ _epoll_loop(int s_socket)
 			memset(read_buffer, 0, sizeof(read_buffer));
 
 			c_len = sizeof(conn->addr);
-			conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len);
-			if (conn->sock == -1) {
+			if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
 				printf("failed open socket.\n");
 				return -1;
 			}
 
-			read_size = read(conn->sock, read_buffer, sizeof(read_buffer));
-			if (read_size == -1) {
+			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
 				printf("failed read socket.\n");
 				return -1;
 			}
