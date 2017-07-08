@@ -82,6 +82,30 @@ _normal_loop(int s_socket)
 	return 0;
 }
 
+typedef struct {
+	int efd;
+	struct epoll_event e;
+} rat_event;
+
+static rat_event*
+_create_event(int sock)
+{
+	rat_event *event;
+	event = (rat_event*)malloc(sizeof(rat_event));
+
+	event->efd = epoll_create(NEVENTS);
+	if (event->efd < 0) {
+		perror("epoll_create");
+		return event;
+	}
+
+	memset(&event->e, 0, sizeof(event->e));	
+	event->e.events = EPOLLIN;
+	event->e.data.fd = sock;
+
+	return event;
+}
+
 static int
 _epoll_loop(int s_socket)
 {
