@@ -102,6 +102,10 @@ _create_event(int sock)
 	memset(&event->e, 0, sizeof(event->e));	
 	event->e.events = EPOLLIN;
 	event->e.data.fd = sock;
+	if (epoll_ctl(event->efd, EPOLL_CTL_ADD, sock, &event->e)) {
+		perror("epoll_ctl");
+		return event;
+	}
 
 	return event;
 }
@@ -109,38 +113,23 @@ _create_event(int sock)
 static int
 _epoll_loop(int s_socket)
 {
- 	int epfd;
- 	struct epoll_event ev, ev_ret[NEVENTS];
+	rat_event *e;
+	e = _create_event(s_socket);
 
-	epfd = epoll_create(NEVENTS);
-	if (epfd < 0) {
-		perror("epoll_create");
-		return 1;
-	}
-
-	memset(&ev, 0, sizeof(ev));
-	ev.events = EPOLLIN;
-	ev.data.fd = s_socket;
-	if (epoll_ctl(epfd, EPOLL_CTL_ADD, s_socket, &ev) != 0) {
-		perror("epoll_ctl");
-		return 1;
-	}
-
-	int flg = 0;
-	int i, n, nfds;
+	struct epoll_event ev_ret[NEVENTS];
+	int i, n, nfds, c_len;
 	rat_connection *conn;
-	int c_len;
 	conn = _create_connection();
 
 	while (1) {
-		nfds = epoll_wait(epfd, ev_ret, NEVENTS, -1);
+		nfds = epoll_wait(e->efd, ev_ret, NEVENTS, -1);
 		if (nfds <= 0) {
 			perror("epoll_wait");
 			return 1;
 		}
 		for (i = 0; i < nfds; i++) {
 
-			if (ev_ret[i].data.fd != s_socket) {
+			if (ev_ret[i].data.fd != e->e.data.fd) {
 				continue;
 			}
 
