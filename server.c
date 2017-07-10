@@ -19,8 +19,7 @@ _send_response(int c_socket)
 	char file_buffer[1024];
 	FILE *fp;
 
-	fp = fopen(filepath, "r");
-	if (fp == NULL) {
+	if ((fp = fopen(filepath, "r")) == NULL) {
 		write(c_socket, HTTP_404_RES, strlen(HTTP_404_RES));
 		close(c_socket);
 		return;
@@ -85,6 +84,7 @@ _normal_loop(int s_socket)
 typedef struct {
 	int efd;
 	struct epoll_event e;
+	struct epoll_event e_ret[NEVENTS];
 } rat_event;
 
 static rat_event*
@@ -93,8 +93,7 @@ _create_event(int sock)
 	rat_event *event;
 	event = (rat_event*)malloc(sizeof(rat_event));
 
-	event->efd = epoll_create(NEVENTS);
-	if (event->efd < 0) {
+	if ((event->efd = epoll_create(NEVENTS)) < 0) {
 		perror("epoll_create");
 		return event;
 	}
@@ -116,20 +115,18 @@ _epoll_loop(int s_socket)
 	rat_event *e;
 	e = _create_event(s_socket);
 
-	struct epoll_event ev_ret[NEVENTS];
-	int i, n, nfds, c_len;
+	int i, nfds, c_len;
 	rat_connection *conn;
 	conn = _create_connection();
 
 	while (1) {
-		nfds = epoll_wait(e->efd, ev_ret, NEVENTS, -1);
-		if (nfds <= 0) {
+		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
 			perror("epoll_wait");
 			return 1;
 		}
 		for (i = 0; i < nfds; i++) {
 
-			if (ev_ret[i].data.fd != e->e.data.fd) {
+			if (e->e_ret[i].data.fd != e->e.data.fd) {
 				continue;
 			}
 
