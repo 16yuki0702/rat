@@ -19,8 +19,7 @@ _send_response(int c_socket)
 	char file_buffer[1024];
 	FILE *fp;
 
-	fp = fopen(filepath, "r");
-	if (fp == NULL) {
+	if ((fp = fopen(filepath, "r")) == NULL) {
 		write(c_socket, HTTP_404_RES, strlen(HTTP_404_RES));
 		close(c_socket);
 		return;
@@ -52,7 +51,7 @@ static int
 _normal_loop(int s_socket)
 {
 	rat_connection *conn;
-	int c_len, read_size;
+	int c_len;
 	conn = _create_connection();
 
 	while (1) {
@@ -60,14 +59,12 @@ _normal_loop(int s_socket)
 		memset(read_buffer, 0, sizeof(read_buffer));
 
 		c_len = sizeof(conn->addr);
-		conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len);
-		if (conn->sock == -1) {
+		if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
 			printf("failed open socket.\n");
 			return -1;
 		}
 
-		read_size = read(conn->sock, read_buffer, sizeof(read_buffer));
-		if (read_size == -1) {
+		if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
 			printf("failed read socket.\n");
 			return -1;
 		}
@@ -84,41 +81,52 @@ _normal_loop(int s_socket)
 	return 0;
 }
 
+typedef struct {
+	int efd;
+	struct epoll_event e;
+	struct epoll_event e_ret[NEVENTS];
+} rat_event;
+
+static rat_event*
+_create_event(int sock)
+{
+	rat_event *event;
+	event = (rat_event*)malloc(sizeof(rat_event));
+
+	if ((event->efd = epoll_create(NEVENTS)) < 0) {
+		perror("epoll_create");
+		return event;
+	}
+
+	memset(&event->e, 0, sizeof(event->e));	
+	event->e.events = EPOLLIN;
+	event->e.data.fd = sock;
+	if (epoll_ctl(event->efd, EPOLL_CTL_ADD, sock, &event->e)) {
+		perror("epoll_ctl");
+		return event;
+	}
+
+	return event;
+}
+
 static int
 _epoll_loop(int s_socket)
 {
- 	int epfd;
- 	struct epoll_event ev, ev_ret[NEVENTS];
+	rat_event *e;
+	e = _create_event(s_socket);
 
-	epfd = epoll_create(NEVENTS);
-	if (epfd < 0) {
-		perror("epoll_create");
-		return 1;
-	}
-
-	memset(&ev, 0, sizeof(ev));
-	ev.events = EPOLLIN;
-	ev.data.fd = s_socket;
-	if (epoll_ctl(epfd, EPOLL_CTL_ADD, s_socket, &ev) != 0) {
-		perror("epoll_ctl");
-		return 1;
-	}
-
-	int flg = 0;
-	int i, n, nfds;
+	int i, nfds, c_len;
 	rat_connection *conn;
-	int c_len, read_size;
 	conn = _create_connection();
 
 	while (1) {
-		nfds = epoll_wait(epfd, ev_ret, NEVENTS, -1);
-		if (nfds <= 0) {
+		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
 			perror("epoll_wait");
 			return 1;
 		}
 		for (i = 0; i < nfds; i++) {
 
-			if (ev_ret[i].data.fd != s_socket) {
+			if (e->e_ret[i].data.fd != e->e.data.fd) {
 				continue;
 			}
 
@@ -126,14 +134,12 @@ _epoll_loop(int s_socket)
 			memset(read_buffer, 0, sizeof(read_buffer));
 
 			c_len = sizeof(conn->addr);
-			conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len);
-			if (conn->sock == -1) {
+			if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
 				printf("failed open socket.\n");
 				return -1;
 			}
 
-			read_size = read(conn->sock, read_buffer, sizeof(read_buffer));
-			if (read_size == -1) {
+			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
 				printf("failed read socket.\n");
 				return -1;
 			}
