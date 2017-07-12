@@ -1,7 +1,14 @@
+#include <signal.h>
 #include "server.h"
 #include "config.h"
 
 rat_conf *conf;
+
+void
+signal_handler(int signal)
+{
+	printf("signal num = %d\n", signal);
+}
 
 int
 main(int argc, char *argv[])
@@ -19,6 +26,11 @@ main(int argc, char *argv[])
 
 	if (error_code) {
 		printf("please review config file. there is error config.\n");
+		return -1;
+	}
+
+	if (signal(SIGINT, signal_handler) == SIG_ERR) {
+		printf("couldn't set signal.\n");
 		return -1;
 	}
 
