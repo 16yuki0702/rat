@@ -18,14 +18,10 @@ static void
 _conf_handler_string(char **conf, const char *param)
 {
 	char *ret;
-	int len;
 
 	ret = strdup(param);
-	len = strlen(ret);
 
-	if (ret[len - 1] == '\n') {
-		ret[len - 1] = '\0';
-	}
+	ret[strlen(ret) - 1] = '\0';
 
 	*conf = ret;
 }
@@ -36,7 +32,6 @@ _check_number(const char *param)
 	char *str = (char *)param;;
 
 	do {
-
 		if (*str >= '0' && *str <= '9') {
 			continue;
 		} else if (*str == '\r' || *str == '\n' || *str == '\0') {
