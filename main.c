@@ -2,6 +2,15 @@
 #include "server.h"
 #include "config.h"
 
+#define LOG(level, str)				\
+	do {					\
+		if (rat_log_level >= level) { 	\
+			_log x;			\
+		}				\
+	} while (0)
+
+int rat_log_level = 0;
+
 rat_conf *conf;
 
 void
