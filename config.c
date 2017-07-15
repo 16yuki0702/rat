@@ -12,6 +12,7 @@ _dump_config(void)
 	printf("backlog : %d\n", 	conf->backlog);
 	printf("socket_reuse : %d\n", 	conf->socket_reuse);
 	printf("use_epoll : %d\n", 	conf->use_epoll);
+	printf("log_level : %d\n", 	conf->log_level);
 }
 
 static void
@@ -98,6 +99,8 @@ _read_config(char *path)
 			_conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "use_epoll")) {
 			_conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "log_level")) {
+			_conf_handler_int(&conf->log_level, strtok_r(NULL, "", &cptr));
 		}
 	}
 }
@@ -115,7 +118,7 @@ read_config(char *path)
 		return -1;
 	}
 
-	//_dump_config();
+	_dump_config();
 
 	return 0;
 }
