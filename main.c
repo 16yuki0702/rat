@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <signal.h>
+#include <stdarg.h>
 #include "server.h"
 #include "config.h"
 
@@ -9,11 +10,12 @@ FILE *rat_log_file;
 	do {					\
 		if (rat_log_level >= level) { 	\
 			_log_prefix(__func__);	\
-			_log x;			\
+			_log str;		\
 		}				\
 	} while (0)
 
-void _log_prefix(const char *func) {
+void _log_prefix(const char *func)
+{
 	char prefix[21];
 	strncpy(prefix, func, 20);
 	prefix[20] = '\0';
@@ -23,7 +25,8 @@ void _log_prefix(const char *func) {
 	fprintf(rat_log_file, "%-20s ", prefix);
 }
 
-void _log(const char *fmt, ...) {
+void _log(const char *fmt, ...)
+{
 	va_list ap;
 	va_start(ap, fmt);
 	vfprintf(rat_log_file, fmt, ap);
@@ -32,9 +35,22 @@ void _log(const char *fmt, ...) {
 	fflush(rat_log_file);
 }
 
+void _set_log(FILE *f)
+{
+	rat_log_file = f;
+}
+
 int rat_log_level = 0;
 
 rat_conf *conf;
+
+typedef enum {
+	DEBUG,
+	INFO,
+	WARNING,
+	ERROR,
+	CRITICAL
+} RAT_LOG_LEVEL;
 
 void
 signal_handler(int signal)
@@ -47,6 +63,10 @@ main(int argc, char *argv[])
 {
 	char *conf_path;
 	int error_code = 0;
+
+	_set_log(stdout);
+
+	LOG(DEBUG, ("test"));
 
 	if (argv[1] == NULL) {
 		printf("please specify config file.\n");
