@@ -58,6 +58,20 @@ signal_handler(int signal)
 	printf("signal num = %d\n", signal);
 }
 
+void
+set_signal()
+{
+	struct sigaction sa;
+
+	sa.sa_handler = signal_handler;
+	sigemptyset(&sa.sa_mask);
+	sigaddset(&sa.sa_mask, SIGINT);
+	sa.sa_flags = 0;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		printf("can't catch SIGINT\n");
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -81,10 +95,7 @@ main(int argc, char *argv[])
 		return -1;
 	}
 
-	if (signal(SIGINT, signal_handler) == SIG_ERR) {
-		printf("couldn't set signal.\n");
-		return -1;
-	}
+	set_signal();
 
 	open_socket(conf);
 	
