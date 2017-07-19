@@ -4,6 +4,8 @@
 #include "server.h"
 #include "config.h"
 
+#define LOG_FILE "log/rat.log"
+
 FILE *rat_log_file;
 
 #define LOG(level, str)				\
@@ -38,6 +40,19 @@ void _log(const char *fmt, ...)
 void _set_log(FILE *f)
 {
 	rat_log_file = f;
+}
+
+FILE *
+_open_log_file(char *filepath)
+{
+	FILE *f;
+	f = fopen(filepath, "w");
+	if (f == NULL) {
+		printf("fail open log file.\n");
+		exit(1);
+	}
+
+	return f;
 }
 
 int rat_log_level = 0;
@@ -78,7 +93,7 @@ main(int argc, char *argv[])
 	char *conf_path;
 	int error_code = 0;
 
-	_set_log(stdout);
+	_set_log(_open_log_file(LOG_FILE));
 
 	LOG(DEBUG, ("test"));
 
