@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 #include "server.h"
 #include "config.h"
 
+#define LOG_DIR "log"
 #define LOG_FILE "log/rat.log"
 
 FILE *rat_log_file;
@@ -45,6 +47,12 @@ void _set_log(FILE *f)
 FILE *
 _open_log_file(char *filepath)
 {
+	struct stat s;
+	if (lstat(LOG_DIR, &s) == -1) {
+		printf("not found %s\n", LOG_DIR);
+		mkdir(LOG_DIR, 0755);
+	}
+
 	FILE *f;
 	f = fopen(filepath, "w");
 	if (f == NULL) {
