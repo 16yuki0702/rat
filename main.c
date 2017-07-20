@@ -82,6 +82,12 @@ signal_handler(int signal)
 }
 
 void
+sighup_handler(int signal)
+{
+	printf("signal num = %d\n", signal);
+}
+
+void
 set_signal()
 {
 	struct sigaction sa;
@@ -92,6 +98,14 @@ set_signal()
 	sa.sa_flags = 0;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
 		printf("can't catch SIGINT\n");
+	}
+
+	sa.sa_handler = sighup_handler;
+	sigemptyset(&sa.sa_mask);
+	sigaddset(&sa.sa_mask, SIGINT);
+	sa.sa_flags = 0;
+	if (sigaction(SIGHUP, &sa, NULL) < 0) {
+		printf("can't catch SIGHUP\n");
 	}
 }
 
