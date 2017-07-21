@@ -7,6 +7,7 @@
 
 #define LOG_DIR "log"
 #define LOG_FILE "log/rat.log"
+#define DEFAULT_CONF_PATH "rat.conf"
 
 FILE *rat_log_file;
 
@@ -84,6 +85,7 @@ signal_handler(int signal)
 void
 sighup_handler(int signal)
 {
+	read_config(DEFAULT_CONF_PATH);
 	printf("signal num = %d\n", signal);
 }
 
