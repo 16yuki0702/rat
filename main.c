@@ -2,6 +2,7 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "server.h"
 #include "config.h"
 
@@ -111,11 +112,22 @@ set_signal()
 	}
 }
 
+void
+_initialize_time()
+{
+	time_t timer;
+	struct tm *t_st;
+
+	time(&timer);
+}
+
 int
 main(int argc, char *argv[])
 {
 	char *conf_path;
 	int error_code = 0;
+
+	_initialize_time();
 
 	_set_log(_open_log_file(LOG_FILE));
 
