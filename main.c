@@ -56,7 +56,7 @@ _open_log_file(char *filepath)
 	}
 
 	FILE *f;
-	f = fopen(filepath, "w");
+	f = fopen(filepath, "a");
 	if (f == NULL) {
 		printf("fail open log file.\n");
 		exit(1);
@@ -119,6 +119,16 @@ _initialize_time()
 	struct tm *t_st;
 
 	time(&timer);
+
+	printf("current time : %s\n", ctime(&timer));
+
+	t_st = localtime(&timer);
+	printf("month: %d\n",t_st->tm_mon + 1);
+	printf("day: %d\n",t_st->tm_mday);
+	printf("hour: %d\n",t_st->tm_hour);
+	printf("minute: %d\n",t_st->tm_min);
+	printf("second: %d\n",t_st->tm_sec);
+
 }
 
 int
