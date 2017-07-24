@@ -117,18 +117,30 @@ _initialize_time()
 {
 	time_t timer;
 	struct tm *t_st;
+	char buf[1024];
 
 	time(&timer);
 
 	printf("current time : %s\n", ctime(&timer));
 
 	t_st = localtime(&timer);
+	printf("year: %d\n",t_st->tm_year + 1900);
 	printf("month: %d\n",t_st->tm_mon + 1);
 	printf("day: %d\n",t_st->tm_mday);
 	printf("hour: %d\n",t_st->tm_hour);
 	printf("minute: %d\n",t_st->tm_min);
 	printf("second: %d\n",t_st->tm_sec);
 
+	sprintf(buf, "%d%02d%02d%02d%02d%02d",
+		t_st->tm_year + 1900,
+		t_st->tm_mon + 1,
+		t_st->tm_mday,
+		t_st->tm_hour,
+		t_st->tm_min,
+		t_st->tm_sec
+	);
+
+	printf("%s\n", buf);
 }
 
 int
