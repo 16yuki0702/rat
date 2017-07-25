@@ -141,6 +141,7 @@ _initialize_time()
 	);
 
 	printf("%s\n", buf);
+	printf("%ld\n", strlen(buf));
 }
 
 int
