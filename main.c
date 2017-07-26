@@ -20,6 +20,8 @@ FILE *rat_log_file;
 		}				\
 	} while (0)
 
+#define DEBUG(str) LOG(DEBUG, str)
+
 void _log_prefix(const char *func)
 {
 	char prefix[21];
