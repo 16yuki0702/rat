@@ -22,7 +22,21 @@ FILE *rat_log_file;
 
 #define DEBUG(str) LOG(DEBUG, str)
 
-void _log_prefix(const char *func)
+double
+rat_time(void)
+{
+	double now;
+	struct timeval tv;
+	if (gettimeofday(&tv, NULL) != 0) {
+		return 0;
+	}
+	now = (double) tv.tv_sec + (((double) tv.tv_usec) / 1000000.0);
+
+	return now;
+}
+
+void
+_log_prefix(const char *func)
 {
 	char prefix[21];
 	strncpy(prefix, func, 20);
@@ -30,10 +44,19 @@ void _log_prefix(const char *func)
 	if (rat_log_file == NULL) {
 		rat_log_file = stderr;
 	}
-	fprintf(rat_log_file, "%-20s ", prefix);
+	fprintf(rat_log_file, "%-20s\t", prefix);
+
+	time_t t;
+	char date[20] = {0};
+
+	time(&t);
+	strftime(date, sizeof(date), "%Y/%m/%d %H:%M:%S\t", localtime(&t));
+
+	fprintf(rat_log_file, "%s ", date);
 }
 
-void _log(const char *fmt, ...)
+void
+_log(const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -43,7 +66,8 @@ void _log(const char *fmt, ...)
 	fflush(rat_log_file);
 }
 
-void _set_log(FILE *f)
+void
+_set_log(FILE *f)
 {
 	rat_log_file = f;
 }
@@ -114,45 +138,11 @@ set_signal()
 	}
 }
 
-void
-_initialize_time()
-{
-	time_t timer;
-	struct tm *t_st;
-	char buf[1024];
-
-	time(&timer);
-
-	printf("current time : %s\n", ctime(&timer));
-
-	t_st = localtime(&timer);
-	printf("year: %d\n",t_st->tm_year + 1900);
-	printf("month: %d\n",t_st->tm_mon + 1);
-	printf("day: %d\n",t_st->tm_mday);
-	printf("hour: %d\n",t_st->tm_hour);
-	printf("minute: %d\n",t_st->tm_min);
-	printf("second: %d\n",t_st->tm_sec);
-
-	sprintf(buf, "%d%02d%02d%02d%02d%02d",
-		t_st->tm_year + 1900,
-		t_st->tm_mon + 1,
-		t_st->tm_mday,
-		t_st->tm_hour,
-		t_st->tm_min,
-		t_st->tm_sec
-	);
-
-	printf("%s\n", buf);
-	printf("%ld\n", strlen(buf));
-}
-
 int
 main(int argc, char *argv[])
 {
 	char *conf_path;
 	int error_code = 0;
-
-	_initialize_time();
 
 	_set_log(_open_log_file(LOG_FILE));
 
