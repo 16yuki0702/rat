@@ -20,8 +20,9 @@ FILE *rat_log_file;
 		}				\
 	} while (0)
 
-#define debug(str) LOG(DEBUG, str)
-#define info(str) LOG(INFO, str)
+#define debug(str)	LOG(DEBUG, str)
+#define info(str)	LOG(INFO, str)
+#define warning(str)	LOG(WARNING, str)
 
 double
 rat_time(void)
