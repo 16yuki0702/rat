@@ -20,7 +20,11 @@ FILE *rat_log_file;
 		}				\
 	} while (0)
 
-#define DEBUG(str) LOG(DEBUG, str)
+#define _DEBUG(str)	LOG(DEBUG,	str)
+#define _INFO(str)	LOG(INFO,	str)
+#define _WARNING(str)	LOG(WARNING,	str)
+#define _ERROR(str)	LOG(ERROR,	str)
+#define _FATAL(str)	LOG(FATAL,	str)
 
 double
 rat_time(void)
@@ -100,7 +104,7 @@ typedef enum {
 	INFO,
 	WARNING,
 	ERROR,
-	CRITICAL
+	FATAL
 } RAT_LOG_LEVEL;
 
 void
