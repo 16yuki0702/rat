@@ -26,6 +26,13 @@ FILE *rat_log_file;
 #define _ERROR(str)	LOG(ERROR,	str)
 #define _FATAL(str)	LOG(FATAL,	str)
 
+#define GET_LOG_LEVEL(x)				\
+	((x == DEBUG)	? "[DEBUG]"	:		\
+	(x == INFO)	? "[INFO]"	:		\
+	(x == WARNING)	? "[WARNING]"	:		\
+	(x == ERROR)	? "[ERROR]"	:		\
+	(x == FATAL)	? "[FATAl]"	: "[UNKNOWN]")
+
 double
 rat_time(void)
 {
