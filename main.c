@@ -11,6 +11,17 @@
 #define DEFAULT_CONF_PATH "rat.conf"
 
 FILE *rat_log_file;
+rat_conf *conf;
+
+typedef enum {
+	DEBUG,
+	INFO,
+	WARNING,
+	ERROR,
+	FATAL
+} RAT_LOG_LEVEL;
+
+int rat_log_level = DEBUG;
 
 #define LOG(level, str)				\
 	do {					\
@@ -49,7 +60,7 @@ rat_time(void)
 void
 _log_prefix(const char *func)
 {
-	fprintf(log_file, "%s\t", GET_LOG_LEVEL(log_level));
+	fprintf(rat_log_file, "%s\t", GET_LOG_LEVEL(rat_log_level));
 
 	time_t t;
 	char date[20] = {0};
@@ -104,17 +115,6 @@ _open_log_file(char *filepath)
 	return f;
 }
 
-int rat_log_level = 0;
-
-rat_conf *conf;
-
-typedef enum {
-	DEBUG,
-	INFO,
-	WARNING,
-	ERROR,
-	FATAL
-} RAT_LOG_LEVEL;
 
 void
 signal_handler(int signal)
