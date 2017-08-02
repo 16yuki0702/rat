@@ -49,13 +49,7 @@ rat_time(void)
 void
 _log_prefix(const char *func)
 {
-	char prefix[21];
-	strncpy(prefix, func, 20);
-	prefix[20] = '\0';
-	if (rat_log_file == NULL) {
-		rat_log_file = stderr;
-	}
-	fprintf(rat_log_file, "%-20s\t", prefix);
+	fprintf(log_file, "%s\t", GET_LOG_LEVEL(log_level));
 
 	time_t t;
 	char date[20] = {0};
@@ -64,6 +58,14 @@ _log_prefix(const char *func)
 	strftime(date, sizeof(date), "%Y/%m/%d %H:%M:%S\t", localtime(&t));
 
 	fprintf(rat_log_file, "%s ", date);
+
+	char prefix[31];
+	strncpy(prefix, func, 30);
+	prefix[30] = '\0';
+	if (rat_log_file == NULL) {
+		rat_log_file = stderr;
+	}
+	fprintf(rat_log_file, "%-30s\t", prefix);
 }
 
 void
