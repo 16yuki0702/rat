@@ -126,6 +126,11 @@ void
 sighup_handler(int signal)
 {
 	read_config(DEFAULT_CONF_PATH);
+
+	close(rat_log_file);
+
+	_set_log(_open_log_file(LOG_FILE));
+
 	printf("signal num = %d\n", signal);
 }
 
