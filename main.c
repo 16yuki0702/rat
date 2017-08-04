@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <string.h>
 #include "server.h"
 #include "config.h"
 
@@ -43,6 +44,13 @@ int rat_log_level = DEBUG;
 	(x == WARNING)	? "[WARNING]"	:		\
 	(x == ERROR)	? "[ERROR]"	:		\
 	(x == FATAL)	? "[FATAl]"	: "[UNKNOWN]")
+
+#define GET_LOG_LEVEL_VALUE(x)					\
+	((!strcmp(x, "DEBUG"))	? DEBUG		:		\
+	(!strcmp(x, "INFO"))	? INFO		:		\
+	(!strcmp(x, "WARNING"))	? WARNING	:		\
+	(!strcmp(x, "ERROR"))	? ERROR		:		\
+	(!strcmp(x, "FATAL"))	? FATAL		: -1)
 
 double
 rat_time(void)
