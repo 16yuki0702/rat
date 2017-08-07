@@ -45,3 +45,5 @@ void log(const char *fmt, ...);
 void set_log(FILE *f);
 
 FILE *open_log_file(char *filepath);
+
+#endif

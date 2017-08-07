@@ -6,51 +6,9 @@
 #include <string.h>
 #include "server.h"
 #include "config.h"
+#include "rat_log.h"
 
-#define LOG_DIR "log"
-#define LOG_FILE "log/rat.log"
-#define DEFAULT_CONF_PATH "rat.conf"
-
-FILE *rat_log_file;
 rat_conf *conf;
-
-typedef enum {
-	DEBUG,
-	INFO,
-	WARNING,
-	ERROR,
-	FATAL
-} RAT_LOG_LEVEL;
-
-int rat_log_level = DEBUG;
-
-#define LOG(level, str)				\
-	do {					\
-		if (rat_log_level >= level) { 	\
-			_log_prefix(__func__);	\
-			_log str;		\
-		}				\
-	} while (0)
-
-#define _DEBUG(str)	LOG(DEBUG,	str)
-#define _INFO(str)	LOG(INFO,	str)
-#define _WARNING(str)	LOG(WARNING,	str)
-#define _ERROR(str)	LOG(ERROR,	str)
-#define _FATAL(str)	LOG(FATAL,	str)
-
-#define GET_LOG_LEVEL(x)				\
-	((x == DEBUG)	? "[DEBUG]"	:		\
-	(x == INFO)	? "[INFO]"	:		\
-	(x == WARNING)	? "[WARNING]"	:		\
-	(x == ERROR)	? "[ERROR]"	:		\
-	(x == FATAL)	? "[FATAl]"	: "[UNKNOWN]")
-
-#define GET_LOG_LEVEL_VALUE(x)					\
-	((!strcmp(x, "DEBUG"))	? DEBUG		:		\
-	(!strcmp(x, "INFO"))	? INFO		:		\
-	(!strcmp(x, "WARNING"))	? WARNING	:		\
-	(!strcmp(x, "ERROR"))	? ERROR		:		\
-	(!strcmp(x, "FATAL"))	? FATAL		: -1)
 
 double
 rat_time(void)
@@ -66,65 +24,6 @@ rat_time(void)
 }
 
 void
-_log_prefix(const char *func)
-{
-	fprintf(rat_log_file, "%s\t", GET_LOG_LEVEL(rat_log_level));
-
-	time_t t;
-	char date[20] = {0};
-
-	time(&t);
-	strftime(date, sizeof(date), "%Y/%m/%d %H:%M:%S\t", localtime(&t));
-
-	fprintf(rat_log_file, "%s ", date);
-
-	char prefix[31];
-	strncpy(prefix, func, 30);
-	prefix[30] = '\0';
-	if (rat_log_file == NULL) {
-		rat_log_file = stderr;
-	}
-	fprintf(rat_log_file, "%-30s\t", prefix);
-}
-
-void
-_log(const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	vfprintf(rat_log_file, fmt, ap);
-	va_end(ap);
-	fputc('\n', rat_log_file);
-	fflush(rat_log_file);
-}
-
-void
-_set_log(FILE *f)
-{
-	rat_log_file = f;
-}
-
-FILE *
-_open_log_file(char *filepath)
-{
-	struct stat s;
-	if (lstat(LOG_DIR, &s) == -1) {
-		printf("not found %s\n", LOG_DIR);
-		mkdir(LOG_DIR, 0755);
-	}
-
-	FILE *f;
-	f = fopen(filepath, "a");
-	if (f == NULL) {
-		printf("fail open log file.\n");
-		exit(1);
-	}
-
-	return f;
-}
-
-
-void
 signal_handler(int signal)
 {
 	printf("signal num = %d\n", signal);
@@ -137,7 +36,7 @@ sighup_handler(int signal)
 
 	close(rat_log_file);
 
-	_set_log(_open_log_file(LOG_FILE));
+	set_log(open_log_file(LOG_FILE));
 
 	printf("signal num = %d\n", signal);
 }
@@ -170,7 +69,7 @@ main(int argc, char *argv[])
 	char *conf_path;
 	int error_code = 0;
 
-	_set_log(_open_log_file(LOG_FILE));
+	set_log(open_log_file(LOG_FILE));
 
 	LOG(DEBUG, ("test"));
 
