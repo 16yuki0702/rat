@@ -20,8 +20,8 @@ int rat_log_level = DEBUG;
 #define LOG(level, str)				\
 	do {					\
 		if (rat_log_level >= level) { 	\
-			_log_prefix(__func__);	\
-			_log str;		\
+			log_prefix(__func__);	\
+			rat_log str;		\
 		}				\
 	} while (0)
 
@@ -40,7 +40,7 @@ int rat_log_level = DEBUG;
 
 void log_prefix(const char *func);
 
-void log(const char *fmt, ...);
+void rat_log(const char *fmt, ...);
 
 void set_log(FILE *f);
 

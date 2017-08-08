@@ -27,7 +27,7 @@ log_prefix(const char *func)
 }
 
 void
-log(const char *fmt, ...)
+rat_log(const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
