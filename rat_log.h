@@ -1,11 +1,18 @@
 #ifndef RAT_LOG_H
 #define RAT_LOG_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+#include <sys/stat.h>
+
 #define LOG_DIR "log"
 #define LOG_FILE "log/rat.log"
 #define DEFAULT_CONF_PATH "rat.conf"
 
-FILE *rat_log_file;
+extern FILE *rat_log_file;
 
 typedef enum {
 	DEBUG,
@@ -15,7 +22,7 @@ typedef enum {
 	FATAL
 } RAT_LOG_LEVEL;
 
-int rat_log_level = DEBUG;
+extern int rat_log_level;
 
 #define LOG(level, str)				\
 	do {					\
@@ -38,12 +45,12 @@ int rat_log_level = DEBUG;
 	(x == ERROR)	? "[ERROR]"	:		\
 	(x == FATAL)	? "[FATAl]"	: "[UNKNOWN]")
 
-void log_prefix(const char *func);
+extern void log_prefix(const char *func);
 
-void rat_log(const char *fmt, ...);
+extern void rat_log(const char *fmt, ...);
 
-void set_log(FILE *f);
+extern void set_log(FILE *f);
 
-FILE *open_log_file(char *filepath);
+extern FILE *open_log_file(char *filepath);
 
 #endif
