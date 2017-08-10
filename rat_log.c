@@ -1,8 +1,7 @@
 #include "rat_log.h"
 
-FILE *rat_log_file;
-
 int rat_log_level = DEBUG;
+FILE *rat_log_file;
 
 void
 log_prefix(const char *func)
