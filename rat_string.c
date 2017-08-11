@@ -19,3 +19,14 @@ rat_str_trim(char *str)
         while (str[i] != '\0' && str[i] == ' ') i++;
         strcpy(str, &str[i]);
 }
+
+rat_str *
+make_rat_str(char *str)
+{
+	rat_str *r;
+
+	r = (rat_str*)malloc(sizeof(rat_str));
+	memset(r, 0, sizeof(r));
+
+	return r;
+}
