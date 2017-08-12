@@ -7,7 +7,7 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include "http.h"
-#include "config.h"
+#include "rat_config.h"
 
 extern int open_socket(rat_conf *conf);
 

@@ -1,4 +1,4 @@
-#include "config.h"
+#include "rat_config.h"
 
 rat_conf *conf;
 config_detail conf_error;

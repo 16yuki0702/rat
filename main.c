@@ -5,7 +5,7 @@
 #include <time.h>
 #include <string.h>
 #include "server.h"
-#include "config.h"
+#include "rat_config.h"
 #include "rat_log.h"
 
 rat_conf *conf;
