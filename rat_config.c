@@ -7,8 +7,8 @@ static void
 _dump_config(void)
 {
 	printf("port : %d\n",		conf->port);
-	printf("host : %s\n",		conf->host);
-	printf("protocol : %s\n",	conf->protocol);
+	printf("host : %s\n",		conf->host->data);
+	printf("protocol : %s\n",	conf->protocol->data);
 	printf("backlog : %d\n", 	conf->backlog);
 	printf("socket_reuse : %d\n", 	conf->socket_reuse);
 	printf("use_epoll : %d\n", 	conf->use_epoll);
@@ -16,13 +16,17 @@ _dump_config(void)
 }
 
 static void
-_conf_handler_string(char **conf, const char *param)
+_conf_handler_string(rat_str **conf, char *param)
 {
+	/*
 	char *ret;
 
 	ret = strdup(param);
 
 	ret[strlen(ret) - 1] = '\0';
+	*/
+	rat_str *ret;
+	ret = make_rat_str(param);
 
 	*conf = ret;
 }

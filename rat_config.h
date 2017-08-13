@@ -9,8 +9,8 @@
 
 typedef struct {
 	uint16_t port;
-	char *host;
-	char *protocol;
+	rat_str *host;
+	rat_str *protocol;
 	uint16_t backlog;
 	int socket_reuse;
 	int use_epoll;
