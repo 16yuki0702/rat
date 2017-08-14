@@ -19,7 +19,7 @@
 	"\r\n"
 
 typedef struct {
-	char *method;
+	rat_str *method;
 	char *uri;
 	char *version;
 	char *host;

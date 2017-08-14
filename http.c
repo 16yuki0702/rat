@@ -24,7 +24,7 @@ _trim(char *str)
 static void
 _dump_request(void)
 {
-	if (rat_request->method) printf("method:%s\n", rat_request->method);
+	if (rat_request->method) printf("method:%s\n", rat_request->method->data);
 	if (rat_request->uri) printf("uri:%s\n", rat_request->uri);
 	if (rat_request->version) printf("version:%s\n", rat_request->version);
 	if (rat_request->host) printf("host:%s\n", rat_request->host);
@@ -98,7 +98,7 @@ _parse_header_line(char *request_line)
 	char *token;
 	char *cptr;
 
-	rat_request->method = strtok_r(request_line, " ", &cptr);
+	rat_request->method = make_rat_str(strtok_r(request_line, " ", &cptr));
 	rat_request->uri = strtok_r(NULL, " ", &cptr);
 	strtok_r(NULL, "/", &cptr);
 	rat_request->version = strtok_r(NULL, "\n", &cptr);
