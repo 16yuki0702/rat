@@ -20,8 +20,8 @@
 
 typedef struct {
 	rat_str *method;
-	char *uri;
-	char *version;
+	rat_str *uri;
+	rat_str *version;
 	char *host;
 	char *connection;
 	int upgrade_insecure_requests;

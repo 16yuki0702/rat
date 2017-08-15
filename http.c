@@ -25,8 +25,8 @@ static void
 _dump_request(void)
 {
 	if (rat_request->method) printf("method:%s\n", rat_request->method->data);
-	if (rat_request->uri) printf("uri:%s\n", rat_request->uri);
-	if (rat_request->version) printf("version:%s\n", rat_request->version);
+	if (rat_request->uri) printf("uri:%s\n", rat_request->uri->data);
+	if (rat_request->version) printf("version:%s\n", rat_request->version->data);
 	if (rat_request->host) printf("host:%s\n", rat_request->host);
 	if (rat_request->connection) printf("connection:%s\n", rat_request->connection);
 	if (rat_request->upgrade_insecure_requests) printf("upgrade_insecure_requests:%d\n", rat_request->upgrade_insecure_requests);
@@ -99,9 +99,9 @@ _parse_header_line(char *request_line)
 	char *cptr;
 
 	rat_request->method = make_rat_str(strtok_r(request_line, " ", &cptr));
-	rat_request->uri = strtok_r(NULL, " ", &cptr);
+	rat_request->uri = make_rat_str(strtok_r(NULL, " ", &cptr));
 	strtok_r(NULL, "/", &cptr);
-	rat_request->version = strtok_r(NULL, "\n", &cptr);
+	rat_request->version = make_rat_str(strtok_r(NULL, "\n", &cptr));
 
 	return cptr;
 }
