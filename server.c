@@ -10,10 +10,10 @@ _send_response(int c_socket)
 {
 	char *filepath;
 
-	if (!strcmp(rat_request->uri, "/")) {
+	if (!strcmp(rat_request->uri->data, "/")) {
 		filepath = "index.html";
 	} else {
-		filepath = rat_request->uri;
+		filepath = rat_request->uri->data;
 	}
 	
 	char file_buffer[1024];

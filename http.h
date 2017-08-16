@@ -22,7 +22,7 @@ typedef struct {
 	rat_str *method;
 	rat_str *uri;
 	rat_str *version;
-	char *host;
+	rat_str *host;
 	char *connection;
 	int upgrade_insecure_requests;
 	char *user_agent;
