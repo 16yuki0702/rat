@@ -28,7 +28,7 @@ _dump_request(void)
 	if (rat_request->uri) printf("uri:%s\n", rat_request->uri->data);
 	if (rat_request->version) printf("version:%s\n", rat_request->version->data);
 	if (rat_request->host) printf("host:%s\n", rat_request->host->data);
-	if (rat_request->connection) printf("connection:%s\n", rat_request->connection);
+	if (rat_request->connection) printf("connection:%s\n", rat_request->connection->data);
 	if (rat_request->upgrade_insecure_requests) printf("upgrade_insecure_requests:%d\n", rat_request->upgrade_insecure_requests);
 	if (rat_request->user_agent) printf("user_agent:%s\n", rat_request->user_agent);
 	if (rat_request->accept) printf("accept:%s\n", rat_request->accept);
@@ -43,7 +43,7 @@ _set_request_parameter(char *key, char *value)
 	if (!strcmp(key, "Host")) {
 		rat_request->host = make_rat_str(value);
 	} else if (!strcmp(key, "Connection")) {
-		rat_request->connection = value;
+		rat_request->connection = make_rat_str(value);
 	} else if (!strcmp(key, "Upgrade-Insecure-Requests")) {
 		rat_request->upgrade_insecure_requests = atoi(value);
 	} else if (!strcmp(key, "User-Agent")) {

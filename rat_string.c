@@ -28,8 +28,9 @@ make_rat_str(char *str)
 	r = (rat_str*)malloc(sizeof(rat_str));
 	memset(r, 0, sizeof(r));
 
-	r->data = (char*)malloc(sizeof(char) * strlen(str) + 1);
-	strncpy(r->data, str, strlen(str) + 1);
+	r->data = (char*)malloc(sizeof(char) * strlen(str));
+	strcpy(r->data, str);
+	r->data[strlen(r->data) - 1] = '\0';
 
 	r->len = strlen(str);
 
