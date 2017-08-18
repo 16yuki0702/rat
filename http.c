@@ -30,10 +30,10 @@ _dump_request(void)
 	if (rat_request->host) printf("host:%s\n", rat_request->host->data);
 	if (rat_request->connection) printf("connection:%s\n", rat_request->connection->data);
 	if (rat_request->upgrade_insecure_requests) printf("upgrade_insecure_requests:%d\n", rat_request->upgrade_insecure_requests);
-	if (rat_request->user_agent) printf("user_agent:%s\n", rat_request->user_agent);
-	if (rat_request->accept) printf("accept:%s\n", rat_request->accept);
-	if (rat_request->accept_encoding) printf("accept_encoding:%s\n", rat_request->accept_encoding);
-	if (rat_request->accept_language) printf("accept_language:%s\n", rat_request->accept_language);
+	if (rat_request->user_agent) printf("user_agent:%s\n", rat_request->user_agent->data);
+	if (rat_request->accept) printf("accept:%s\n", rat_request->accept->data);
+	if (rat_request->accept_encoding) printf("accept_encoding:%s\n", rat_request->accept_encoding->data);
+	if (rat_request->accept_language) printf("accept_language:%s\n", rat_request->accept_language->data);
 }
 
 static void
@@ -47,13 +47,13 @@ _set_request_parameter(char *key, char *value)
 	} else if (!strcmp(key, "Upgrade-Insecure-Requests")) {
 		rat_request->upgrade_insecure_requests = atoi(value);
 	} else if (!strcmp(key, "User-Agent")) {
-		rat_request->user_agent = value;
+		rat_request->user_agent = make_rat_str(value);
 	} else if (!strcmp(key, "Accept")) {
-		rat_request->accept = value;
+		rat_request->accept = make_rat_str(value);
 	} else if (!strcmp(key, "Accept-Encoding")) {
-		rat_request->accept_encoding = value;
+		rat_request->accept_encoding = make_rat_str(value);
 	} else if (!strcmp(key, "Accept-Language")) {
-		rat_request->accept_language = value;
+		rat_request->accept_language = make_rat_str(value);
 	}
 }
 
@@ -143,5 +143,5 @@ http_request_parse(char *request_line)
 	cptr = _parse_header_line(cp);
 	_parse_header_body(cptr);
 
-	//_dump_request();
+	_dump_request();
 }

@@ -25,10 +25,10 @@ typedef struct {
 	rat_str *host;
 	rat_str *connection;
 	int upgrade_insecure_requests;
-	char *user_agent;
-	char *accept;
-	char *accept_encoding;
-	char *accept_language;
+	rat_str *user_agent;
+	rat_str *accept;
+	rat_str *accept_encoding;
+	rat_str *accept_language;
 } http_request;
 
 extern http_request *rat_request;
