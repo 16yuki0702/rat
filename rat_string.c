@@ -30,7 +30,10 @@ make_rat_str(char *str)
 
 	r->data = (char*)malloc(sizeof(char) * strlen(str));
 	strcpy(r->data, str);
-	r->data[strlen(r->data) - 1] = '\0';
+
+	if (r->data[strlen(r->data) - 1] == '\n') {
+		r->data[strlen(r->data) - 1] = '\0';
+	}
 
 	r->len = strlen(str);
 
