@@ -26,7 +26,7 @@ rat_time(void)
 void
 signal_handler(int signal)
 {
-	printf("signal num = %d\n", signal);
+	_DEBUG(("signal num = %d\n", signal));
 }
 
 void
@@ -38,7 +38,7 @@ sighup_handler(int signal)
 
 	set_log(open_log_file(LOG_FILE));
 
-	printf("signal num = %d\n", signal);
+	_DEBUG(("signal num = %d\n", signal));
 }
 
 void
@@ -70,8 +70,6 @@ main(int argc, char *argv[])
 	int error_code = 0;
 
 	set_log(open_log_file(LOG_FILE));
-
-	LOG(DEBUG, ("test"));
 
 	if (argv[1] == NULL) {
 		printf("please specify config file.\n");

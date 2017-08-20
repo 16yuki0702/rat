@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rat_string.h"
+#include "rat_log.h"
 
 #define HTTP_200_RES "" 				\
 	"HTTP/1.1 200 OK \r\n" 				\
