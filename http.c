@@ -63,7 +63,7 @@ substr(char const *str, int start, int end)
 	char *dst, *ret;
 	int i, strlen = end - start;
 	if (strlen < 0) {
-		_ERROR((("strlen minus error.\n"));
+		_ERROR(("strlen minus error.\n"));
 		return NULL;
 	}
 	dst = calloc(1, strlen);	

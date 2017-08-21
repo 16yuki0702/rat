@@ -6,13 +6,13 @@ config_detail conf_error;
 static void
 _dump_config(void)
 {
-	printf("port : %d\n",		conf->port);
-	printf("host : %s\n",		conf->host->data);
-	printf("protocol : %s\n",	conf->protocol->data);
-	printf("backlog : %d\n", 	conf->backlog);
-	printf("socket_reuse : %d\n", 	conf->socket_reuse);
-	printf("use_epoll : %d\n", 	conf->use_epoll);
-	printf("log_level : %d\n", 	conf->log_level);
+	_DEBUG(("port : %d\n",		conf->port));
+	_DEBUG(("host : %s\n",		conf->host->data));
+	_DEBUG(("protocol : %s\n",	conf->protocol->data));
+	_DEBUG(("backlog : %d\n", 	conf->backlog));
+	_DEBUG(("socket_reuse : %d\n", 	conf->socket_reuse));
+	_DEBUG(("use_epoll : %d\n", 	conf->use_epoll));
+	_DEBUG(("log_level : %d\n", 	conf->log_level));
 }
 
 static void
@@ -118,7 +118,7 @@ read_config(char *path)
 	_read_config(path);
 
 	if (conf_error.r_code) {
-		printf("config error : %s\n", conf_error.r_message);
+		_ERROR(("config error : %s\n", conf_error.r_message));
 		return -1;
 	}
 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rat_string.h"
+#include "rat_log.h"
 
 typedef struct {
 	uint16_t port;
