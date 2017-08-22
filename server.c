@@ -60,12 +60,12 @@ _normal_loop(int s_socket)
 
 		c_len = sizeof(conn->addr);
 		if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
-			printf("failed open socket.\n");
+			_ERROR(("failed open socket."));
 			return -1;
 		}
 
 		if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
-			printf("failed read socket.\n");
+			_ERROR(("failed read socket."));
 			return -1;
 		}
 
@@ -135,12 +135,12 @@ _epoll_loop(int s_socket)
 
 			c_len = sizeof(conn->addr);
 			if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
-				printf("failed open socket.\n");
+				_ERROR(("failed open socket."));
 				return -1;
 			}
 
 			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
-				printf("failed read socket.\n");
+				_ERROR(("failed read socket."));
 				return -1;
 			}
 
@@ -175,12 +175,12 @@ open_socket(rat_conf *conf)
 	}
 
 	if (bind(s_socket, (struct sockaddr *)&s_addr, sizeof(s_addr)) != 0) {
-		printf("failed bind socket.\n");
+		_ERROR(("failed bind socket."));
 		return -1;
 	}
 
 	if (listen(s_socket, conf->backlog) != 0) {
-		printf("failed listen socket.\n");
+		_ERROR(("failed listen socket."));
 		return -1;
 	}
 
