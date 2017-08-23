@@ -51,7 +51,7 @@ set_signal()
 	sigaddset(&sa.sa_mask, SIGINT);
 	sa.sa_flags = 0;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		printf("can't catch SIGINT\n");
+		_ERROR(("can't catch SIGINT"));
 	}
 
 	sa.sa_handler = sighup_handler;
@@ -59,7 +59,7 @@ set_signal()
 	sigaddset(&sa.sa_mask, SIGINT);
 	sa.sa_flags = 0;
 	if (sigaction(SIGHUP, &sa, NULL) < 0) {
-		printf("can't catch SIGHUP\n");
+		_ERROR(("can't catch SIGHUP"));
 	}
 }
 

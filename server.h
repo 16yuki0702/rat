@@ -9,6 +9,19 @@
 #include "http.h"
 #include "rat_config.h"
 
+#define NEVENTS 16
+
 extern int open_socket(rat_conf *conf);
+
+typedef struct {
+	struct sockaddr_in addr;
+	int sock;
+} rat_connection;
+
+typedef struct {
+	int efd;
+	struct epoll_event e;
+	struct epoll_event e_ret[NEVENTS];
+} rat_event;
 
 #endif

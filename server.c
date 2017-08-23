@@ -3,8 +3,6 @@
 
 http_request *rat_request;
 
-#define NEVENTS 16
-
 static void
 _send_response(int c_socket)
 {
@@ -32,11 +30,6 @@ _send_response(int c_socket)
 
 	close(c_socket);
 }
-
-typedef struct {
-	struct sockaddr_in addr;
-	int sock;
-} rat_connection;
 
 static rat_connection*
 _create_connection()
@@ -80,12 +73,6 @@ _normal_loop(int s_socket)
 
 	return 0;
 }
-
-typedef struct {
-	int efd;
-	struct epoll_event e;
-	struct epoll_event e_ret[NEVENTS];
-} rat_event;
 
 static rat_event*
 _create_event(int sock)
