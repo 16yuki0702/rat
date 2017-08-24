@@ -3,6 +3,8 @@
 
 http_request *rat_request;
 
+static int (*_server_loop)(int s_socket, rat_conf *conf);
+
 static void
 _send_response(int c_socket)
 {
@@ -41,7 +43,7 @@ _create_connection()
 }
 
 static int
-_normal_loop(int s_socket)
+_normal_loop(int s_socket, rat_conf *conf)
 {
 	rat_connection *conn;
 	int c_len;
@@ -97,10 +99,11 @@ _create_event(int sock)
 }
 
 static int
-_epoll_loop(int s_socket)
+_epoll_loop(int s_socket, rat_conf *conf)
 {
 	rat_event *e;
 	e = _create_event(s_socket);
+	ioctl(s_socket, FIONBIO, &conf->use_epoll);
 
 	int i, nfds, c_len;
 	rat_connection *conn;
@@ -172,11 +175,8 @@ open_socket(rat_conf *conf)
 	}
 
 	if (conf->use_epoll) {
-		
-		ioctl(s_socket, FIONBIO, &conf->use_epoll);
-		
-		return _epoll_loop(s_socket);
+		return _epoll_loop(s_socket, conf);
 	} else {
-		return _normal_loop(s_socket);
+		return _normal_loop(s_socket, conf);
 	}
 }
