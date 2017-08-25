@@ -150,6 +150,16 @@ LOOP_END:
 }
 
 int
+initialize_server(rat_conf *conf)
+{ 
+	if (conf->use_epoll) {
+		_server_loop = _epoll_loop;
+	} else {
+		_server_loop = _normal_loop;
+	}
+}
+
+int
 open_socket(rat_conf *conf)
 {
 	int s_socket;
@@ -174,9 +184,5 @@ open_socket(rat_conf *conf)
 		return -1;
 	}
 
-	if (conf->use_epoll) {
-		return _epoll_loop(s_socket, conf);
-	} else {
-		return _normal_loop(s_socket, conf);
-	}
+	return _server_loop(s_socket, conf);
 }

@@ -86,6 +86,7 @@ main(int argc, char *argv[])
 
 	set_signal();
 
+	initialize_server(conf);
 	open_socket(conf);
 	
 	return 0;
