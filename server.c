@@ -46,11 +46,11 @@ static int
 _normal_loop(int s_socket, rat_conf *conf)
 {
 	rat_connection *conn;
+	char read_buffer[1024];
 	int c_len;
 	conn = _create_connection();
 
 	while (1) {
-		char read_buffer[1024];
 		memset(read_buffer, 0, sizeof(read_buffer));
 
 		c_len = sizeof(conn->addr);
@@ -105,6 +105,7 @@ _epoll_loop(int s_socket, rat_conf *conf)
 	e = _create_event(s_socket);
 	ioctl(s_socket, FIONBIO, &conf->use_epoll);
 
+	char read_buffer[1024];
 	int i, nfds, c_len;
 	rat_connection *conn;
 	conn = _create_connection();
@@ -120,7 +121,6 @@ _epoll_loop(int s_socket, rat_conf *conf)
 				continue;
 			}
 
-			char read_buffer[1024];
 			memset(read_buffer, 0, sizeof(read_buffer));
 
 			c_len = sizeof(conn->addr);
@@ -134,13 +134,11 @@ _epoll_loop(int s_socket, rat_conf *conf)
 				return -1;
 			}
 
-			http_request_parse(read_buffer);
+			http_request_parse2(read_buffer);
 
 			_send_response(conn->sock);
 		}
 	}
-
-LOOP_END:
 
 	close(s_socket);
 

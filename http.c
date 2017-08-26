@@ -145,3 +145,23 @@ http_request_parse(char *request_line)
 
 	_dump_request();
 }
+
+http_request *
+http_request_parse2(char *request_line)
+{
+	char *ctrl_ptr, *current_pos;
+	http_request *r;
+
+	r = (http_request*)malloc(sizeof(http_request));
+	memset(r, 0, sizeof(http_request));
+
+	current_pos = request_line;
+
+	while (*current_pos) {
+		printf("%c", *current_pos);
+
+		++current_pos;
+	}
+
+	return r;
+}

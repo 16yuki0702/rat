@@ -35,5 +35,6 @@ typedef struct {
 extern http_request *rat_request;
 
 extern void http_request_parse(char *request_line);
+extern http_request *http_request_parse2(char *request_line);
 
 #endif
