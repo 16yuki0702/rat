@@ -146,21 +146,33 @@ http_request_parse(char *request_line)
 	_dump_request();
 }
 
+#define CHECK_EOF()					\
+	if (c_pos[1] == '\r' && c_pos[2] == '\n') {	\
+		eof = 1;				\
+	}
+
 http_request *
 http_request_parse2(char *request_line)
 {
-	char *ctrl_ptr, *current_pos;
+	int eof = 0;
+	char *ctrl_p, *c_pos;
 	http_request *r;
 
 	r = (http_request*)malloc(sizeof(http_request));
 	memset(r, 0, sizeof(http_request));
 
-	current_pos = request_line;
+	ctrl_p = c_pos = request_line;
 
-	while (*current_pos) {
-		printf("%c", *current_pos);
+	while (*c_pos) {
+		CHECK_EOF();
+		if (eof) {
+			printf("%s", ctrl_p);
+			ctrl_p = c_pos;
+			c_pos = c_pos + 3;
+			eof = 0;
+		}
 
-		++current_pos;
+		++c_pos;
 	}
 
 	return r;
