@@ -149,6 +149,10 @@ http_request_parse(char *request_line)
 #define CHECK_EOF()					\
 	if (c_pos[1] == '\r' && c_pos[2] == '\n') {	\
 		eof = 1;				\
+	} else if (c_pos[1] == '\r') {			\
+		eof = 1;				\
+	} else if (c_pos[1] == '\n') {			\
+		eof = 1;				\
 	}
 
 http_request *
