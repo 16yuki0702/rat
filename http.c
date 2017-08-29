@@ -159,6 +159,7 @@ http_request *
 http_request_parse2(char *request_line)
 {
 	int eof = 0;
+	size_t diff = 0;
 	char *ctrl_p, *c_pos;
 	http_request *r;
 
@@ -166,6 +167,26 @@ http_request_parse2(char *request_line)
 	memset(r, 0, sizeof(http_request));
 
 	ctrl_p = c_pos = request_line;
+
+	// parse request header line
+	while (*c_pos) {
+		if (c_pos[1] == ' ') {
+			diff = c_pos - ctrl_p;
+			ctrl_p = c_pos;
+			printf("diff = %ld\n", diff);
+		}
+
+		CHECK_EOF();
+		if (eof) {
+			printf("%s", ctrl_p);
+			ctrl_p = c_pos;
+			c_pos = c_pos + 3;
+			eof = 0;
+			break;
+		}
+
+		++c_pos;
+	}
 
 	while (*c_pos) {
 		CHECK_EOF();
