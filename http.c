@@ -161,6 +161,7 @@ http_request_parse2(char *request_line)
 	int eof = 0;
 	size_t diff = 0;
 	char *ctrl_p, *c_pos;
+	char test[64];
 	http_request *r;
 
 	r = (http_request*)malloc(sizeof(http_request));
@@ -171,9 +172,11 @@ http_request_parse2(char *request_line)
 	// parse request header line
 	while (*c_pos) {
 		if (c_pos[1] == ' ') {
-			diff = c_pos - ctrl_p;
+			diff = (c_pos - ctrl_p) + 1;
+			strncpy(test, ctrl_p, diff);
 			ctrl_p = c_pos;
-			printf("diff = %ld\n", diff);
+			c_pos += 2;
+			printf("(test)%s\n", test);
 		}
 
 		CHECK_EOF();
