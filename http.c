@@ -155,13 +155,19 @@ http_request_parse(char *request_line)
 		eof = 1;				\
 	}
 
+typedef enum {
+	HTTP_METHOD,
+	REQUEST_URI,
+	HTTP_VERSION
+} REQUEST_HEADER_LINE;
+
 http_request *
 http_request_parse2(char *request_line)
 {
-	int eof = 0;
+	int eof = 0, hit = 0;
 	size_t diff = 0;
 	char *ctrl_p, *c_pos;
-	char test[64];
+	char method[8] = {0}, uri[256] = {0}, version[16] = {0};
 	http_request *r;
 
 	r = (http_request*)malloc(sizeof(http_request));
@@ -171,25 +177,34 @@ http_request_parse2(char *request_line)
 
 	// parse request header line
 	while (*c_pos) {
-		if (c_pos[1] == ' ') {
-			diff = (c_pos - ctrl_p) + 1;
-			strncpy(test, ctrl_p, diff);
-			ctrl_p = c_pos;
-			c_pos += 2;
-			printf("(test)%s\n", test);
-		}
+		if (*c_pos == ' ') {
+			printf("current = %s\n", c_pos);
+			diff = (c_pos - ctrl_p);
+			switch (hit) {
+				case HTTP_METHOD:
+					strncpy(method, ctrl_p, diff);
+					break;
+				case REQUEST_URI:
+					strncpy(uri, ctrl_p, diff);
+					break;
+				case HTTP_VERSION:
+					strncpy(version, ctrl_p, diff);
+					break;
+				default:
+					break;
+			}
 
-		CHECK_EOF();
-		if (eof) {
-			printf("%s", ctrl_p);
-			ctrl_p = c_pos;
-			c_pos = c_pos + 3;
-			eof = 0;
-			break;
+			ctrl_p = (c_pos + 1);
+			hit++;
 		}
 
 		++c_pos;
 	}
+
+	printf("request = %s\n", request_line);
+	printf("method = %s\n", method);
+	printf("uri = %s\n", uri);
+	printf("version = %s\n", version);
 
 	while (*c_pos) {
 		CHECK_EOF();
