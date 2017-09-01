@@ -61,6 +61,8 @@ set_signal()
 	if (sigaction(SIGHUP, &sa, NULL) < 0) {
 		_ERROR(("can't catch SIGHUP"));
 	}
+
+	signal(SIGPIPE, SIG_IGN);
 }
 
 int
