@@ -147,11 +147,7 @@ http_request_parse(char *request_line)
 }
 
 #define CHECK_EOF()					\
-	if (c_pos[1] == '\r' && c_pos[2] == '\n') {	\
-		eof = 1;				\
-	} else if (c_pos[1] == '\r') {			\
-		eof = 1;				\
-	} else if (c_pos[1] == '\n') {			\
+	if (c_pos[0] == '\r' && c_pos[1] == '\n') {	\
 		eof = 1;				\
 	}
 
@@ -177,8 +173,8 @@ http_request_parse2(char *request_line)
 
 	// parse request header line
 	while (*c_pos) {
+		CHECK_EOF();
 		if (*c_pos == ' ') {
-			printf("current = %s\n", c_pos);
 			diff = (c_pos - ctrl_p);
 			switch (hit) {
 				case HTTP_METHOD:
@@ -187,32 +183,59 @@ http_request_parse2(char *request_line)
 				case REQUEST_URI:
 					r->uri = make_rat_strn(ctrl_p, diff);
 					break;
+<<<<<<< HEAD
 				case HTTP_VERSION:
 					r->version = make_rat_strn(ctrl_p, diff);
 					break;
+=======
+>>>>>>> ce0d88d20cbf2de1c5e8b2048324f21270e54dcd
 				default:
 					break;
 			}
 
 			ctrl_p = (c_pos + 1);
 			hit++;
+		} else if (eof) {
+			diff = (c_pos - ctrl_p);
+			strncpy(version, ctrl_p, diff);
+			c_pos += 2;
+			ctrl_p = c_pos;
+			eof = 0;
+			goto REQUEST_LINE_PARSE_END;
 		}
 
 		++c_pos;
 	}
 
+REQUEST_LINE_PARSE_END:
 	printf("request = %s\n", request_line);
 	printf("method = %s\n", method);
 	printf("uri = %s\n", uri);
 	printf("version = %s\n", version);
 
+	char k[64] = {0}, v[64] = {0};
+
 	while (*c_pos) {
 		CHECK_EOF();
 		if (eof) {
-			printf("%s", ctrl_p);
+			diff = (c_pos - ctrl_p);
+			memset(v, 0, 64);
+			strncpy(v, ctrl_p, diff);
+			c_pos += 2;
 			ctrl_p = c_pos;
-			c_pos = c_pos + 3;
+			printf("k = %s\n", k);
+			printf("v = %s\n", v);
 			eof = 0;
+			continue;
+		}
+
+		if (*c_pos == ':') {
+			diff = (c_pos - ctrl_p);
+			memset(k, 0, 64);
+			strncpy(k, ctrl_p, diff);
+			c_pos += 2;
+			ctrl_p = c_pos;
+			continue;
 		}
 
 		++c_pos;
