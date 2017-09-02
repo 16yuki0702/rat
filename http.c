@@ -183,12 +183,6 @@ http_request_parse2(char *request_line)
 				case REQUEST_URI:
 					r->uri = make_rat_strn(ctrl_p, diff);
 					break;
-<<<<<<< HEAD
-				case HTTP_VERSION:
-					r->version = make_rat_strn(ctrl_p, diff);
-					break;
-=======
->>>>>>> ce0d88d20cbf2de1c5e8b2048324f21270e54dcd
 				default:
 					break;
 			}
@@ -197,7 +191,7 @@ http_request_parse2(char *request_line)
 			hit++;
 		} else if (eof) {
 			diff = (c_pos - ctrl_p);
-			strncpy(version, ctrl_p, diff);
+			r->version = make_rat_strn(ctrl_p, diff);
 			c_pos += 2;
 			ctrl_p = c_pos;
 			eof = 0;
