@@ -39,3 +39,19 @@ make_rat_str(char *str)
 
 	return r;
 }
+
+rat_str *
+make_rat_strn(char *str, size_t size)
+{
+	rat_str *r;
+
+	r = (rat_str*)malloc(sizeof(rat_str));
+	memset(r, 0, sizeof(r));
+
+	r->data = (char*)malloc(sizeof(char) * size);
+	strncpy(r->data, str, size);
+
+	r->len = size;
+
+	return r;
+}

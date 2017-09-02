@@ -182,13 +182,13 @@ http_request_parse2(char *request_line)
 			diff = (c_pos - ctrl_p);
 			switch (hit) {
 				case HTTP_METHOD:
-					strncpy(method, ctrl_p, diff);
+					r->method = make_rat_strn(ctrl_p, diff);
 					break;
 				case REQUEST_URI:
-					strncpy(uri, ctrl_p, diff);
+					r->uri = make_rat_strn(ctrl_p, diff);
 					break;
 				case HTTP_VERSION:
-					strncpy(version, ctrl_p, diff);
+					r->version = make_rat_strn(ctrl_p, diff);
 					break;
 				default:
 					break;
