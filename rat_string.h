@@ -17,5 +17,6 @@ typedef struct {
 extern void rat_str_trim(char *str);
 
 extern rat_str *make_rat_str(char *);
+extern rat_str *make_rat_strn(char *, size_t);
 
 #endif
