@@ -147,7 +147,7 @@ http_request_parse(char *request_line)
 }
 
 #define CHECK_EOF()					\
-	if (c_pos[0] == '\r' && c_pos[1] == '\n') {	\
+	if (end[0] == '\r' && end[1] == '\n') {	\
 		eof = 1;				\
 	}
 
@@ -157,82 +157,92 @@ typedef enum {
 	HTTP_VERSION
 } REQUEST_HEADER_LINE;
 
-http_request *
-http_request_parse2(char *request_line)
+void
+_dump_http_entry(http_entry e)
 {
-	int eof = 0, hit = 0;
-	size_t diff = 0;
-	char *ctrl_p, *c_pos;
-	char method[8] = {0}, uri[256] = {0}, version[16] = {0};
-	http_request *r;
+	int i;
+	char *start = e.p;
 
-	r = (http_request*)malloc(sizeof(http_request));
-	memset(r, 0, sizeof(http_request));
+	for (i = 0; i < e.len; i++) {
+		printf("%c", e.p[i]);
+	}
+	printf("\n");
+}
 
-	ctrl_p = c_pos = request_line;
+http_request2 *
+http_request_parse2(char *request)
+{
+	int eof = 0, section = 0, len = 0;
+	char *start, *end;
+	http_request2 *r;
+
+	r = (http_request2*)malloc(sizeof(http_request2));
+	memset(r, 0, sizeof(http_request2));
+
+	start = end = request;
 
 	// parse request header line
-	while (*c_pos) {
+	while (*end) {
 		CHECK_EOF();
-		if (*c_pos == ' ') {
-			diff = (c_pos - ctrl_p);
-			switch (hit) {
+		if (*end == ' ') {
+			len = (end - start);
+			switch (section) {
 				case HTTP_METHOD:
-					r->method = make_rat_strn(ctrl_p, diff);
+					MAKE_HTTP_ENTRY(r->method, start, len);
 					break;
 				case REQUEST_URI:
-					r->uri = make_rat_strn(ctrl_p, diff);
+					MAKE_HTTP_ENTRY(r->uri, start, len);
 					break;
 				default:
 					break;
 			}
 
-			ctrl_p = (c_pos + 1);
-			hit++;
+			start = (end + 1);
+			section++;
 		} else if (eof) {
-			diff = (c_pos - ctrl_p);
-			r->version = make_rat_strn(ctrl_p, diff);
-			c_pos += 2;
-			ctrl_p = c_pos;
+			len = (end - start);
+			MAKE_HTTP_ENTRY(r->version, start, len);
+			end += 2;
+			start = end;
 			eof = 0;
 			goto REQUEST_LINE_PARSE_END;
 		}
 
-		++c_pos;
+		++end;
 	}
 
 REQUEST_LINE_PARSE_END:
-	printf("request = %s\n", request_line);
-	printf("method = %s\n", method);
-	printf("uri = %s\n", uri);
-	printf("version = %s\n", version);
+	printf("request = %s\n", request);
+	_dump_http_entry(r->method);
+	_dump_http_entry(r->uri);
+	_dump_http_entry(r->version);
 
-	char k[64] = {0}, v[64] = {0};
+	char k[64] = {0}, v[1024] = {0};
 
-	while (*c_pos) {
+	while (*end) {
 		CHECK_EOF();
 		if (eof) {
-			diff = (c_pos - ctrl_p);
-			memset(v, 0, 64);
-			strncpy(v, ctrl_p, diff);
-			c_pos += 2;
-			ctrl_p = c_pos;
+			len = (end - start);
+			memset(v, 0, 1024);
+			strncpy(v, start, len);
+			end += 2;
+			start = end;
 			printf("k = %s\n", k);
 			printf("v = %s\n", v);
 			eof = 0;
 			continue;
 		}
 
-		if (*c_pos == ':') {
-			diff = (c_pos - ctrl_p);
+		if (*end == ':') {
+			len = (end - start);
 			memset(k, 0, 64);
-			strncpy(k, ctrl_p, diff);
-			c_pos += 2;
-			ctrl_p = c_pos;
+			strncpy(k, start, len);
+			end += 2;
+			start = end;
 			continue;
 		}
 
-		++c_pos;
+		++end;
 	}
 
 	return r;

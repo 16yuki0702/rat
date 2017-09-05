@@ -32,9 +32,31 @@ typedef struct {
 	rat_str *accept_language;
 } http_request;
 
+typedef struct {
+	char *p;
+	int len;
+} http_entry;
+
+#define MAKE_HTTP_ENTRY(entry, start, len)	\
+	entry.p = start;			\
+	entry.len = len;
+
+typedef struct {
+	http_entry method;
+	http_entry uri;
+	http_entry version;
+	http_entry host;
+	http_entry connection;
+	int upgrade_insecure_requests;
+	http_entry user_agent;
+	http_entry accept;
+	http_entry accept_encoding;
+	http_entry accept_language;
+} http_request2;
+
 extern http_request *rat_request;
 
 extern void http_request_parse(char *request_line);
-extern http_request *http_request_parse2(char *request_line);
+extern http_request2 *http_request_parse2(char *request);
 
 #endif
