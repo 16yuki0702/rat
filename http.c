@@ -146,17 +146,6 @@ http_request_parse(char *request_line)
 	_dump_request();
 }
 
-#define CHECK_EOF()					\
-	if (end[0] == '\r' && end[1] == '\n') {	\
-		eof = 1;				\
-	}
-
-typedef enum {
-	HTTP_METHOD,
-	REQUEST_URI,
-	HTTP_VERSION
-} REQUEST_HEADER_LINE;
-
 void
 _dump_http_entry(http_entry e)
 {
@@ -169,11 +158,23 @@ _dump_http_entry(http_entry e)
 	printf("\n");
 }
 
-http_request2 *
+int
+_same(char *c1, char *c2, int len)
+{
+	int i;
+	for (i = 0; i < len; i++) {
+		if ((!c1[i] || !c2[i]) || c1[i] != c2[i]) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+char *
 http_request_parse2(char *request)
 {
-	int eof = 0, section = 0, len = 0;
-	char *start, *end;
+	int eof = 0, section = 0, len = 0, k_len = 0, v_len = 0;
+	char *start, *end, *k_start, *v_start;
 	http_request2 *r;
 
 	r = (http_request2*)malloc(sizeof(http_request2));
@@ -212,31 +213,23 @@ http_request_parse2(char *request)
 	}
 
 REQUEST_LINE_PARSE_END:
-	printf("request = %s\n", request);
-	_dump_http_entry(r->method);
-	_dump_http_entry(r->uri);
-	_dump_http_entry(r->version);
-
-	char k[64] = {0}, v[1024] = {0};
 
 	while (*end) {
 		CHECK_EOF();
 		if (eof) {
-			len = (end - start);
-			memset(v, 0, 1024);
-			strncpy(v, start, len);
+			v_start = start;
+			v_len = (end - start);
+			CHECK_ENTRY(r, k_start, k_len, v_start, v_len);
 			end += 2;
 			start = end;
-			printf("k = %s\n", k);
-			printf("v = %s\n", v);
 			eof = 0;
+			IS_END();
 			continue;
 		}
 
 		if (*end == ':') {
-			len = (end - start);
-			memset(k, 0, 64);
-			strncpy(k, start, len);
+			k_start = start;
+			k_len = (end - start);
 			end += 2;
 			start = end;
 			continue;
@@ -245,5 +238,14 @@ REQUEST_LINE_PARSE_END:
 		++end;
 	}
 
-	return r;
+	printf("request = %s\n", request);
+	_dump_http_entry(r->method);
+	_dump_http_entry(r->uri);
+	_dump_http_entry(r->version);
+	_dump_http_entry(r->host);
+	_dump_http_entry(r->connection);
+	_dump_http_entry(r->user_agent);
+	_dump_http_entry(r->cookie);
+
+	return end;
 }
