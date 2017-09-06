@@ -64,5 +64,5 @@ open_log_file(char *filepath)
 void
 close_log_file(char *filepath)
 {
-	close(filepath);
+	fclose(filepath);
 }

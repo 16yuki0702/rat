@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "rat_http.h"
 #include "rat_config.h"
 

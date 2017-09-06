@@ -34,7 +34,7 @@ sighup_handler(int signal)
 {
 	read_config(DEFAULT_CONF_PATH);
 
-	close(rat_log_file);
+	fclose(rat_log_file);
 
 	set_log(open_log_file(LOG_FILE));
 

@@ -67,6 +67,7 @@ _server_loop(int s_socket, rat_conf *conf)
 	rat_event *e;
 	e = _create_event(s_socket);
 	ioctl(s_socket, FIONBIO, &on);
+	fcntl(s_socket, F_SETFD, FD_CLOEXEC);
 
 	char read_buffer[1024];
 	int i, nfds, c_len;
