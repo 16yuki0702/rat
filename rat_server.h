@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
-#include "http.h"
+#include "rat_http.h"
 #include "rat_config.h"
 
 #define NEVENTS 16

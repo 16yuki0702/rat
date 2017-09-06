@@ -1,5 +1,5 @@
-#include "server.h"
-#include "http.h"
+#include "rat_server.h"
+#include "rat_http.h"
 
 http_request *rat_request;
 

@@ -4,7 +4,7 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <string.h>
-#include "server.h"
+#include "rat_server.h"
 #include "rat_config.h"
 #include "rat_log.h"
 

@@ -1,4 +1,4 @@
-#include "http.h"
+#include "rat_http.h"
 
 http_request *rat_request;
 

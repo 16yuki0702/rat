@@ -1,7 +1,7 @@
 CC		= gcc
 CLFAGS		= -Wall -O4
 PROG		= rat
-SOURCES		= rat_log.c rat_string.c http.c server.c rat_config.c main.c
+SOURCES		= rat_log.c rat_string.c rat_http.c rat_server.c rat_config.c rat.c
 OBJS		= $(SOURCES:.c=.o)
 
 .PHONY: all
