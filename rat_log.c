@@ -60,3 +60,9 @@ open_log_file(char *filepath)
 
 	return f;
 }
+
+void
+close_log_file(char *filepath)
+{
+	close(filepath);
+}

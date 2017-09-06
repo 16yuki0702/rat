@@ -26,7 +26,7 @@ rat_time(void)
 void
 signal_handler(int signal)
 {
-	_DEBUG(("signal num = %d\n", signal));
+	LOG_DEBUG(("signal num = %d", signal));
 }
 
 void
@@ -38,7 +38,7 @@ sighup_handler(int signal)
 
 	set_log(open_log_file(LOG_FILE));
 
-	_DEBUG(("signal num = %d\n", signal));
+	LOG_DEBUG(("signal num = %d", signal));
 }
 
 void
@@ -51,7 +51,7 @@ set_signal()
 	sigaddset(&sa.sa_mask, SIGINT);
 	sa.sa_flags = 0;
 	if (sigaction(SIGINT, &sa, NULL) < 0) {
-		_ERROR(("can't catch SIGINT"));
+		LOG_ERROR(("can't catch SIGINT"));
 	}
 
 	sa.sa_handler = sighup_handler;
@@ -59,7 +59,7 @@ set_signal()
 	sigaddset(&sa.sa_mask, SIGINT);
 	sa.sa_flags = 0;
 	if (sigaction(SIGHUP, &sa, NULL) < 0) {
-		_ERROR(("can't catch SIGHUP"));
+		LOG_ERROR(("can't catch SIGHUP"));
 	}
 
 	signal(SIGPIPE, SIG_IGN);
@@ -74,7 +74,8 @@ main(int argc, char *argv[])
 	set_log(open_log_file(LOG_FILE));
 
 	if (argv[1] == NULL) {
-		printf("please specify config file.\n");
+		LOG_DEBUG(("please specify config file."));
+		close_log_file(LOG_FILE);
 		return -1;
 	}
 
@@ -82,7 +83,8 @@ main(int argc, char *argv[])
 	error_code = read_config(conf_path);
 
 	if (error_code) {
-		printf("please review config file. there is error config.\n");
+		LOG_DEBUG(("please review config file. there is error config."));
+		close_log_file(LOG_FILE);
 		return -1;
 	}
 

@@ -46,7 +46,7 @@ _create_event(int sock)
 	event = (rat_event*)malloc(sizeof(rat_event));
 
 	if ((event->efd = epoll_create(NEVENTS)) < 0) {
-		perror("epoll_create");
+		LOG_ERROR(("epoll_create"));
 		return event;
 	}
 
@@ -54,7 +54,7 @@ _create_event(int sock)
 	event->e.events = EPOLLIN;
 	event->e.data.fd = sock;
 	if (epoll_ctl(event->efd, EPOLL_CTL_ADD, sock, &event->e)) {
-		perror("epoll_ctl");
+		LOG_ERROR(("epoll_ctl"));
 		return event;
 	}
 
@@ -76,7 +76,7 @@ _server_loop(int s_socket, rat_conf *conf)
 
 	while (1) {
 		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
-			perror("epoll_wait");
+			LOG_ERROR(("epoll_wait"));
 			return 1;
 		}
 		for (i = 0; i < nfds; i++) {
@@ -89,12 +89,12 @@ _server_loop(int s_socket, rat_conf *conf)
 
 			c_len = sizeof(conn->addr);
 			if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
-				_ERROR(("failed open socket."));
+				LOG_ERROR(("failed open socket."));
 				return -1;
 			}
 
 			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
-				_ERROR(("failed read socket."));
+				LOG_ERROR(("failed read socket."));
 				return -1;
 			}
 
@@ -133,12 +133,12 @@ start_server(rat_conf *conf)
 	}
 
 	if (bind(s_socket, (struct sockaddr *)&s_addr, sizeof(s_addr)) != 0) {
-		_ERROR(("failed bind socket."));
+		LOG_ERROR(("failed bind socket."));
 		return -1;
 	}
 
 	if (listen(s_socket, conf->backlog) != 0) {
-		_ERROR(("failed listen socket."));
+		LOG_ERROR(("failed listen socket."));
 		return -1;
 	}
 

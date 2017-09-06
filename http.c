@@ -24,16 +24,16 @@ _trim(char *str)
 static void
 _dump_request(void)
 {
-	if (rat_request->method)			_DEBUG(("method:%s\n", rat_request->method->data));
-	if (rat_request->uri)				_DEBUG(("uri:%s\n", rat_request->uri->data));
-	if (rat_request->version)			_DEBUG(("version:%s\n", rat_request->version->data));
-	if (rat_request->host)				_DEBUG(("host:%s\n", rat_request->host->data));
-	if (rat_request->connection)			_DEBUG(("connection:%s\n", rat_request->connection->data));
-	if (rat_request->upgrade_insecure_requests)	_DEBUG(("upgrade_insecure_requests:%d\n", rat_request->upgrade_insecure_requests));
-	if (rat_request->user_agent)			_DEBUG(("user_agent:%s\n", rat_request->user_agent->data));
-	if (rat_request->accept)			_DEBUG(("accept:%s\n", rat_request->accept->data));
-	if (rat_request->accept_encoding)		_DEBUG(("accept_encoding:%s\n", rat_request->accept_encoding->data));
-	if (rat_request->accept_language)		_DEBUG(("accept_language:%s\n", rat_request->accept_language->data));
+	if (rat_request->method)			LOG_DEBUG(("method:%s", rat_request->method->data));
+	if (rat_request->uri)				LOG_DEBUG(("uri:%s", rat_request->uri->data));
+	if (rat_request->version)			LOG_DEBUG(("version:%s", rat_request->version->data));
+	if (rat_request->host)				LOG_DEBUG(("host:%s", rat_request->host->data));
+	if (rat_request->connection)			LOG_DEBUG(("connection:%s", rat_request->connection->data));
+	if (rat_request->upgrade_insecure_requests)	LOG_DEBUG(("upgrade_insecure_requests:%d", rat_request->upgrade_insecure_requests));
+	if (rat_request->user_agent)			LOG_DEBUG(("user_agent:%s", rat_request->user_agent->data));
+	if (rat_request->accept)			LOG_DEBUG(("accept:%s", rat_request->accept->data));
+	if (rat_request->accept_encoding)		LOG_DEBUG(("accept_encoding:%s", rat_request->accept_encoding->data));
+	if (rat_request->accept_language)		LOG_DEBUG(("accept_language:%s", rat_request->accept_language->data));
 }
 
 static void
@@ -63,7 +63,7 @@ substr(char const *str, int start, int end)
 	char *dst, *ret;
 	int i, strlen = end - start;
 	if (strlen < 0) {
-		_ERROR(("strlen minus error.\n"));
+		LOG_ERROR(("strlen minus error."));
 		return NULL;
 	}
 	dst = calloc(1, strlen);	
@@ -82,9 +82,9 @@ strcmp_substr(char const *src, char const *dst, int start, int end)
 	char *check = substr(src, 0, 3);
 
 	if (ret = !strcmp(check, dst)) {
-		_DEBUG(("same!!\n"));
+		LOG_DEBUG(("same!!"));
 	} else {
-		_DEBUG(("not same.\n"));
+		LOG_DEBUG(("not same"));
 	}
 
 	free(check);	

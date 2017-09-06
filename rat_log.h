@@ -32,11 +32,11 @@ extern int rat_log_level;
 		}				\
 	} while (0)
 
-#define _DEBUG(str)	LOG(DEBUG,	str)
-#define _INFO(str)	LOG(INFO,	str)
-#define _WARNING(str)	LOG(WARNING,	str)
-#define _ERROR(str)	LOG(ERROR,	str)
-#define _FATAL(str)	LOG(FATAL,	str)
+#define LOG_DEBUG(str)		LOG(DEBUG,	str)
+#define LOG_INFO(str)		LOG(INFO,	str)
+#define LOG_WARNING(str)	LOG(WARNING,	str)
+#define LOG_ERROR(str)		LOG(ERROR,	str)
+#define LOG_FATAL(str)		LOG(FATAL,	str)
 
 #define GET_LOG_LEVEL(x)				\
 	((x == DEBUG)	? "[DEBUG]"	:		\
@@ -52,5 +52,7 @@ extern void rat_log(const char *fmt, ...);
 extern void set_log(FILE *f);
 
 extern FILE *open_log_file(char *filepath);
+
+extern void close_log_file(char *filepath);
 
 #endif
