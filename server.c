@@ -10,10 +10,10 @@ _send_response(int c_socket)
 	char file_buffer[1024];
 	FILE *fp;
 
-	if (!strcmp(rat_request->uri->data, "/")) {
+	if (is_entry_same(rat_request->uri.p, "/", rat_request->uri.len)) {
 		filepath = "index.html";
 	} else {
-		filepath = rat_request->uri->data;
+		filepath = rat_request->uri.p;
 	}
 
 	if ((fp = fopen(filepath, "r")) == NULL) {
@@ -98,7 +98,7 @@ _server_loop(int s_socket, rat_conf *conf)
 				return -1;
 			}
 
-			http_request_parse2(read_buffer);
+			http_request_parse(read_buffer);
 
 			_send_response(conn->sock);
 		}

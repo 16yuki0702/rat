@@ -26,19 +26,6 @@
 	"HTTP/1.1 500 Internal Server Error \r\n"	\
 	"\r\n"
 
-typedef struct {
-	rat_str *method;
-	rat_str *uri;
-	rat_str *version;
-	rat_str *host;
-	rat_str *connection;
-	int upgrade_insecure_requests;
-	rat_str *user_agent;
-	rat_str *accept;
-	rat_str *accept_encoding;
-	rat_str *accept_language;
-} http_request;
-
 #define MAKE_HTTP_ENTRY(e, s, l)					\
 	e.p = s;							\
 	e.len = l;
@@ -54,13 +41,13 @@ typedef struct {
 	}
 
 #define CHECK_ENTRY(entry, k_start, k_len, v_start, v_len)		\
-	if (_same(k_start, "Host", k_len)) {				\
+	if (is_entry_same(k_start, "Host", k_len)) {				\
 		MAKE_HTTP_ENTRY(entry->host, v_start, v_len);		\
-	} else if (_same(k_start, "Connection", k_len)) {		\
+	} else if (is_entry_same(k_start, "Connection", k_len)) {		\
 		MAKE_HTTP_ENTRY(entry->connection, v_start, v_len);	\
-	} else if (_same(k_start, "User-Agent", k_len)) {		\
+	} else if (is_entry_same(k_start, "User-Agent", k_len)) {		\
 		MAKE_HTTP_ENTRY(entry->user_agent, v_start, v_len);	\
-	} else if (_same(k_start, "Cookie", k_len)) {			\
+	} else if (is_entry_same(k_start, "Cookie", k_len)) {			\
 		MAKE_HTTP_ENTRY(entry->cookie, v_start, v_len);		\
 	}
 
@@ -86,11 +73,12 @@ typedef struct {
 	http_entry accept;
 	http_entry accept_encoding;
 	http_entry accept_language;
-} http_request2;
+} http_request;
 
 extern http_request *rat_request;
 
-extern void http_request_parse(char *request_line);
-extern char *http_request_parse2(char *request);
+extern char *http_request_parse(char *request);
+
+extern int is_entry_same(char *c1, char *c2, int len);
 
 #endif
