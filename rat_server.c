@@ -6,14 +6,13 @@ http_request *rat_request;
 static void
 _send_response(int c_socket)
 {
-	char *filepath;
-	char file_buffer[1024];
+	char filepath[1024], file_buffer[1024];
 	FILE *fp;
 
 	if (is_entry_same(rat_request->uri.p, "/", rat_request->uri.len)) {
-		filepath = "index.html";
+		RAT_STR_CPY(filepath, "index.html");
 	} else {
-		filepath = rat_request->uri.p;
+		GET_ENTRY_URI(filepath, rat_request->uri);
 	}
 
 	if ((fp = fopen(filepath, "r")) == NULL) {

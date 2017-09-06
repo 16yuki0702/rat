@@ -8,21 +8,29 @@
 #include "rat_log.h"
 #include "rat_string.h"
 
-#define HTTP_200_RES "" 				\
-	"HTTP/1.1 200 OK \r\n" 				\
+#define HTTP_200_RES ""							\
+	"HTTP/1.1 200 OK \r\n"						\
 	"\r\n"
 
-#define HTTP_404_RES "" 				\
-	"HTTP/1.1 404 Not Found \r\n" 			\
+#define HTTP_404_RES ""							\
+	"HTTP/1.1 404 Not Found \r\n"					\
 	"\r\n"
 
-#define HTTP_500_RES "" 				\
-	"HTTP/1.1 500 Internal Server Error \r\n"	\
+#define HTTP_500_RES ""							\
+	"HTTP/1.1 500 Internal Server Error \r\n"			\
 	"\r\n"
 
 #define MAKE_HTTP_ENTRY(e, s, l)					\
 	e.p = s;							\
 	e.len = l;
+
+#define GET_ENTRY(s, e)							\
+	strncpy(s, e.p, e.len);						\
+	s[e.len] = '\0';
+
+#define GET_ENTRY_URI(s, e)						\
+	strncpy(s, e.p + 1, e.len - 1);					\
+	s[e.len - 1] = '\0';
 
 #define CHECK_EOF()							\
 	if (end[0] == '\r' && end[1] == '\n') {				\
@@ -35,13 +43,13 @@
 	}
 
 #define CHECK_ENTRY(entry, k_start, k_len, v_start, v_len)		\
-	if (is_entry_same(k_start, "Host", k_len)) {				\
+	if (is_entry_same(k_start, "Host", k_len)) {			\
 		MAKE_HTTP_ENTRY(entry->host, v_start, v_len);		\
-	} else if (is_entry_same(k_start, "Connection", k_len)) {		\
+	} else if (is_entry_same(k_start, "Connection", k_len)) {	\
 		MAKE_HTTP_ENTRY(entry->connection, v_start, v_len);	\
-	} else if (is_entry_same(k_start, "User-Agent", k_len)) {		\
+	} else if (is_entry_same(k_start, "User-Agent", k_len)) {	\
 		MAKE_HTTP_ENTRY(entry->user_agent, v_start, v_len);	\
-	} else if (is_entry_same(k_start, "Cookie", k_len)) {			\
+	} else if (is_entry_same(k_start, "Cookie", k_len)) {		\
 		MAKE_HTTP_ENTRY(entry->cookie, v_start, v_len);		\
 	}
 

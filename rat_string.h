@@ -13,6 +13,9 @@ typedef struct {
 
 #define rat_string(str)		({ (char *)str, sizeof(str) - 1 })
 #define rat_null_string(str)	({ NULL, 0 })
+#define RAT_STR_CPY(c1, c2)						\
+	strncpy(c1, c2, strlen(c2));					\
+	c1[strlen(c2)] = '\0';
 
 extern void rat_str_trim(char *str);
 
