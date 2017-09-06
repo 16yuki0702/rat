@@ -14,7 +14,6 @@ typedef struct {
 	rat_str *protocol;
 	uint16_t backlog;
 	int socket_reuse;
-	int use_epoll;
 	int log_level;
 } rat_conf;
 

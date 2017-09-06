@@ -11,7 +11,7 @@
 
 #define NEVENTS 16
 
-extern int open_socket(rat_conf *conf);
+extern int start_server(rat_conf *conf);
 extern int initialize_server(rat_conf *conf);
 
 typedef struct {

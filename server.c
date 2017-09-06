@@ -3,21 +3,18 @@
 
 http_request *rat_request;
 
-static int (*_server_loop)(int s_socket, rat_conf *conf);
-
 static void
 _send_response(int c_socket)
 {
 	char *filepath;
+	char file_buffer[1024];
+	FILE *fp;
 
 	if (!strcmp(rat_request->uri->data, "/")) {
 		filepath = "index.html";
 	} else {
 		filepath = rat_request->uri->data;
 	}
-	
-	char file_buffer[1024];
-	FILE *fp;
 
 	if ((fp = fopen(filepath, "r")) == NULL) {
 		write(c_socket, HTTP_404_RES, strlen(HTTP_404_RES));
@@ -40,40 +37,6 @@ _create_connection()
 	conn = (rat_connection*)malloc(sizeof(rat_connection));
 
 	return conn;
-}
-
-static int
-_normal_loop(int s_socket, rat_conf *conf)
-{
-	rat_connection *conn;
-	char read_buffer[1024];
-	int c_len;
-	conn = _create_connection();
-
-	while (1) {
-		memset(read_buffer, 0, sizeof(read_buffer));
-
-		c_len = sizeof(conn->addr);
-		if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
-			_ERROR(("failed open socket."));
-			return -1;
-		}
-
-		if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
-			_ERROR(("failed read socket."));
-			return -1;
-		}
-
-		http_request_parse(read_buffer);
-
-		_send_response(conn->sock);
-	}
-
-	close(s_socket);
-
-	free(conn);
-
-	return 0;
 }
 
 static rat_event*
@@ -99,11 +62,12 @@ _create_event(int sock)
 }
 
 static int
-_epoll_loop(int s_socket, rat_conf *conf)
+_server_loop(int s_socket, rat_conf *conf)
 {
+	int on = 1;
 	rat_event *e;
 	e = _create_event(s_socket);
-	ioctl(s_socket, FIONBIO, &conf->use_epoll);
+	ioctl(s_socket, FIONBIO, &on);
 
 	char read_buffer[1024];
 	int i, nfds, c_len;
@@ -150,15 +114,11 @@ _epoll_loop(int s_socket, rat_conf *conf)
 int
 initialize_server(rat_conf *conf)
 { 
-	if (conf->use_epoll) {
-		_server_loop = _epoll_loop;
-	} else {
-		_server_loop = _normal_loop;
-	}
+	(void*)conf;
 }
 
 int
-open_socket(rat_conf *conf)
+start_server(rat_conf *conf)
 {
 	int s_socket;
 	struct sockaddr_in s_addr;

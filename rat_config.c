@@ -11,20 +11,12 @@ _dump_config(void)
 	_DEBUG(("protocol : %s\n",	conf->protocol->data));
 	_DEBUG(("backlog : %d\n", 	conf->backlog));
 	_DEBUG(("socket_reuse : %d\n", 	conf->socket_reuse));
-	_DEBUG(("use_epoll : %d\n", 	conf->use_epoll));
 	_DEBUG(("log_level : %d\n", 	conf->log_level));
 }
 
 static void
 _conf_handler_string(rat_str **conf, char *param)
 {
-	/*
-	char *ret;
-
-	ret = strdup(param);
-
-	ret[strlen(ret) - 1] = '\0';
-	*/
 	rat_str *ret;
 	ret = make_rat_str(param);
 
@@ -78,10 +70,8 @@ static rat_conf *
 _read_config(char *path)
 {
 	FILE *f;
-	char *str;
+	char *str, *token, *cptr;
 	char buf[1024];
-	char *token;
-	char *cptr;
 
 	conf = (rat_conf *)malloc(sizeof(rat_conf));
 	memset(conf, 0, sizeof(conf));
@@ -101,8 +91,6 @@ _read_config(char *path)
 			_conf_handler_uint16(&conf->backlog, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "socket_reuse")) {
 			_conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
-		} else if (!strcmp(token, "use_epoll")) {
-			_conf_handler_int(&conf->use_epoll, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "log_level")) {
 			_conf_handler_int(&conf->log_level, strtok_r(NULL, "", &cptr));
 		}
