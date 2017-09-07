@@ -62,7 +62,9 @@ open_log_file(char *filepath)
 }
 
 void
-close_log_file(char *filepath)
+close_log_file()
 {
-	fclose(filepath);
+	if (rat_log_file != NULL) {
+		fclose(rat_log_file);
+	}
 }

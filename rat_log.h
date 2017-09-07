@@ -53,6 +53,6 @@ extern void set_log(FILE *f);
 
 extern FILE *open_log_file(char *filepath);
 
-extern void close_log_file(char *filepath);
+extern void close_log_file();
 
 #endif

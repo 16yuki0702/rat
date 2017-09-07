@@ -75,7 +75,7 @@ main(int argc, char *argv[])
 
 	if (argv[1] == NULL) {
 		LOG_DEBUG(("please specify config file."));
-		close_log_file(LOG_FILE);
+		close_log_file();
 		return -1;
 	}
 
@@ -84,7 +84,7 @@ main(int argc, char *argv[])
 
 	if (error_code) {
 		LOG_DEBUG(("please review config file. there is error config."));
-		close_log_file(LOG_FILE);
+		close_log_file();
 		return -1;
 	}
 
