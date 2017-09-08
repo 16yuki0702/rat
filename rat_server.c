@@ -30,10 +30,16 @@ _send_response(int c_socket)
 }
 
 static rat_connection*
-_create_connection()
+_create_connection(rat_conf *conf)
 {
 	rat_connection *conn;
 	conn = (rat_connection*)malloc(sizeof(rat_connection));
+
+	conn->s_sock = socket(AF_INET, SOCK_STREAM, 0);
+	conn->s_addr.sin_family = AF_INET;
+	conn->s_addr.sin_port = htons(conf->port);
+	conn->s_addr.sin_addr.s_addr = INADDR_ANY;
+	conn->conf = conf;
 
 	return conn;
 }
@@ -61,18 +67,16 @@ _create_event(int sock)
 }
 
 static int
-_server_loop(int s_socket, rat_conf *conf)
+_server_loop(rat_connection *conn)
 {
 	int on = 1;
 	rat_event *e;
-	e = _create_event(s_socket);
-	ioctl(s_socket, FIONBIO, &on);
-	fcntl(s_socket, F_SETFD, FD_CLOEXEC);
+	e = _create_event(conn->s_sock);
+	ioctl(conn->s_sock, FIONBIO, &on);
+	fcntl(conn->s_sock, F_SETFD, FD_CLOEXEC);
 
 	char read_buffer[1024];
 	int i, nfds, c_len;
-	rat_connection *conn;
-	conn = _create_connection();
 
 	while (1) {
 		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
@@ -88,7 +92,7 @@ _server_loop(int s_socket, rat_conf *conf)
 			memset(read_buffer, 0, sizeof(read_buffer));
 
 			c_len = sizeof(conn->addr);
-			if ((conn->sock = accept(s_socket, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
+			if ((conn->sock = accept(conn->s_sock, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
 				LOG_ERROR(("failed open socket."));
 				return -1;
 			}
@@ -104,7 +108,7 @@ _server_loop(int s_socket, rat_conf *conf)
 		}
 	}
 
-	close(s_socket);
+	close(conn->s_sock);
 
 	free(conn);
 
@@ -120,27 +124,22 @@ initialize_server(rat_conf *conf)
 int
 start_server(rat_conf *conf)
 {
-	int s_socket;
-	struct sockaddr_in s_addr;
+	rat_connection *conn;
+	conn = _create_connection(conf);
 
-	s_socket = socket(AF_INET, SOCK_STREAM, 0);
-	s_addr.sin_family = AF_INET;
-	s_addr.sin_port = htons(conf->port);
-	s_addr.sin_addr.s_addr = INADDR_ANY;
-
-	if (conf->socket_reuse) {
-		setsockopt(s_socket, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
+	if (conn->conf->socket_reuse) {
+		setsockopt(conn->s_sock, SOL_SOCKET, SO_REUSEADDR, &conn->conf->socket_reuse, sizeof(conn->conf->socket_reuse));
 	}
 
-	if (bind(s_socket, (struct sockaddr *)&s_addr, sizeof(s_addr)) != 0) {
+	if (bind(conn->s_sock, (struct sockaddr *)&conn->s_addr, sizeof(conn->s_addr)) != 0) {
 		LOG_ERROR(("failed bind socket."));
 		return -1;
 	}
 
-	if (listen(s_socket, conf->backlog) != 0) {
+	if (listen(conn->s_sock, conn->conf->backlog) != 0) {
 		LOG_ERROR(("failed listen socket."));
 		return -1;
 	}
 
-	return _server_loop(s_socket, conf);
+	return _server_loop(conn);
 }

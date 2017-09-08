@@ -17,8 +17,11 @@ extern int start_server(rat_conf *conf);
 extern int initialize_server(rat_conf *conf);
 
 typedef struct {
+	struct sockaddr_in s_addr;
+	int s_sock;
 	struct sockaddr_in addr;
 	int sock;
+	rat_conf *conf;
 } rat_connection;
 
 typedef struct {
