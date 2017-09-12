@@ -43,6 +43,25 @@ _create_connection(rat_conf *conf)
 	conn->s_addr.sin_addr.s_addr = INADDR_ANY;
 	ioctl(conn->s_sock, FIONBIO, &on);
 	fcntl(conn->s_sock, F_SETFD, FD_CLOEXEC);
+
+	if (conf->socket_reuse) {
+		setsockopt(conn->s_sock, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
+	}
+
+	if (bind(conn->s_sock, (struct sockaddr *)&conn->s_addr, sizeof(conn->s_addr)) != 0) {
+		LOG_ERROR(("failed bind socket."));
+		close(conn->s_sock);
+		free(conn);
+		return NULL;
+	}
+
+	if (listen(conn->s_sock, conf->backlog) != 0) {
+		LOG_ERROR(("failed listen socket."));
+		close(conn->s_sock);
+		free(conn);
+		return NULL;
+	}
+
 	conn->conf = conf;
 
 	return conn;
@@ -127,20 +146,6 @@ start_server(rat_conf *conf)
 {
 	rat_connection *conn;
 	conn = _create_connection(conf);
-
-	if (conn->conf->socket_reuse) {
-		setsockopt(conn->s_sock, SOL_SOCKET, SO_REUSEADDR, &conn->conf->socket_reuse, sizeof(conn->conf->socket_reuse));
-	}
-
-	if (bind(conn->s_sock, (struct sockaddr *)&conn->s_addr, sizeof(conn->s_addr)) != 0) {
-		LOG_ERROR(("failed bind socket."));
-		return -1;
-	}
-
-	if (listen(conn->s_sock, conn->conf->backlog) != 0) {
-		LOG_ERROR(("failed listen socket."));
-		return -1;
-	}
 
 	return _server_loop(conn);
 }
