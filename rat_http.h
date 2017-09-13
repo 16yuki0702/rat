@@ -21,16 +21,22 @@
 	"\r\n"
 
 #define MAKE_HTTP_ENTRY(e, s, l)					\
-	e.p = s;							\
-	e.len = l;
+	do {								\
+		e.p = s;						\
+		e.len = l;						\
+	} while (0)
 
 #define GET_ENTRY(s, e)							\
-	strncpy(s, e.p, e.len);						\
-	s[e.len] = '\0';
+	do {								\
+		strncpy(s, e.p, e.len);					\
+		s[e.len] = '\0';					\
+	} while (0)
 
 #define GET_ENTRY_URI(s, e)						\
-	strncpy(s, e.p + 1, e.len - 1);					\
-	s[e.len - 1] = '\0';
+	do {								\
+		strncpy(s, e.p + 1, e.len - 1);				\
+		s[e.len - 1] = '\0';					\
+	} while (0)
 
 #define CHECK_EOF()							\
 	if (end[0] == '\r' && end[1] == '\n') {				\
