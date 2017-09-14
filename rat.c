@@ -35,9 +35,9 @@ sighup_handler(int signal)
 {
 	read_config(DEFAULT_CONF_PATH);
 
-	fclose(rat_log_file);
+	close_log_file();
 
-	set_log(open_log_file(LOG_FILE));
+	set_log_file();
 
 	LOG_DEBUG(("signal num = %d", signal));
 }
@@ -72,7 +72,7 @@ main(int argc, char *argv[])
 	char *conf_path;
 	int error_code = 0;
 
-	set_log(open_log_file(LOG_FILE));
+	set_log_file();
 
 	if (argv[1] == NULL) {
 		LOG_DEBUG(("please specify config file."));

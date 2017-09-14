@@ -49,7 +49,7 @@ extern void log_prefix(const char *func);
 
 extern void rat_log(const char *fmt, ...);
 
-extern void set_log(FILE *f);
+extern void set_log_file();
 
 extern FILE *open_log_file(char *filepath);
 

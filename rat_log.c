@@ -37,9 +37,9 @@ rat_log(const char *fmt, ...)
 }
 
 void
-set_log(FILE *f)
+set_log_file()
 {
-	rat_log_file = f;
+	rat_log_file = open_log_file(LOG_FILE);
 }
 
 FILE *
