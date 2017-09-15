@@ -66,6 +66,17 @@ set_signal()
 	signal(SIGPIPE, SIG_IGN);
 }
 
+void
+parse_option(int argc, char *argv[])
+{
+	int i;
+
+	for (i = 0; i < argc; i++) {
+		char *com = argv[i];
+		printf("%s\n", com);
+	}
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -73,6 +84,8 @@ main(int argc, char *argv[])
 	int error_code = 0;
 
 	set_log_file();
+
+	parse_option(argc, argv);
 
 	if (argv[1] == NULL) {
 		LOG_DEBUG(("please specify config file."));
