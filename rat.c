@@ -72,8 +72,11 @@ parse_option(int argc, char *argv[])
 	int i;
 
 	for (i = 0; i < argc; i++) {
-		char *com = argv[i];
-		printf("%s\n", com);
+		char *o = argv[i];
+		printf("%s\n", o);
+		if (*o != '-') {
+			LOG_ERROR(("option format error"));
+		}
 	}
 }
 
