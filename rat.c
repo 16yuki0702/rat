@@ -10,7 +10,7 @@
 #include "rat_log.h"
 
 rat_conf *conf;
-char *rat_conf_file_path;
+char *rat_conf_path;
 
 double
 rat_time(void)
@@ -72,9 +72,8 @@ parse_option(int argc, char *argv[])
 {
 	int i;
 
-	for (i = 0; i < argc; i++) {
+	for (i = 1; i < argc; i++) {
 		char *o = argv[i];
-		printf("%s\n", o);
 		if (*o != '-') {
 			fprintf(stderr, "option format error.\n");
 			return -1;
@@ -83,7 +82,7 @@ parse_option(int argc, char *argv[])
 
 		switch (*o) {
 			case 'c' :
-				rat_conf_file_path = argv[i++ + 1];
+				rat_conf_path = argv[i++ + 1];
 				break;
 			default :
 				fprintf(stderr, "option format error.\n");
@@ -96,7 +95,6 @@ parse_option(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-	char *conf_path;
 	int error_code = 0;
 
 	set_log_file();
@@ -109,8 +107,7 @@ main(int argc, char *argv[])
 		return -1;
 	}
 
-	conf_path = argv[1];
-	error_code = read_config(conf_path);
+	error_code = read_config(rat_conf_path);
 
 	if (error_code) {
 		LOG_DEBUG(("please review config file. there is error config."));
