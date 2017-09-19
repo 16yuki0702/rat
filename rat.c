@@ -76,7 +76,7 @@ parse_option(int argc, char *argv[])
 		char *o = argv[i];
 		if (*o != '-') {
 			fprintf(stderr, "option format error.\n");
-			return -1;
+			return 1;
 		}
 		o++;
 
@@ -86,7 +86,7 @@ parse_option(int argc, char *argv[])
 				break;
 			default :
 				fprintf(stderr, "option format error.\n");
-				return -1;
+				return 1;
 				break;
 		}
 	}
@@ -99,7 +99,12 @@ main(int argc, char *argv[])
 
 	set_log_file();
 
-	parse_option(argc, argv);
+	error_code = parse_option(argc, argv);
+	if (error_code) {
+		LOG_DEBUG(("please review option format."));
+		close_log_file();
+		return -1;
+	}
 
 	if (argv[1] == NULL) {
 		LOG_DEBUG(("please specify config file."));
@@ -108,7 +113,6 @@ main(int argc, char *argv[])
 	}
 
 	error_code = read_config(rat_conf_path);
-
 	if (error_code) {
 		LOG_DEBUG(("please review config file. there is error config."));
 		close_log_file();

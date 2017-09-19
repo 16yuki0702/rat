@@ -107,7 +107,7 @@ read_config(char *path)
 
 	if (conf_error.r_code) {
 		LOG_ERROR(("config error : %s", conf_error.r_message));
-		return -1;
+		return conf_error.r_code;
 	}
 
 	_dump_config();
