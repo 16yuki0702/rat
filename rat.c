@@ -90,6 +90,8 @@ parse_option(int argc, char *argv[])
 				break;
 		}
 	}
+
+	return 0;
 }
 
 int
