@@ -28,13 +28,15 @@ rat_time(void)
 void
 signal_handler(int signal)
 {
+	close_log_file();
+
 	LOG_DEBUG(("signal num = %d", signal));
 }
 
 void
 sighup_handler(int signal)
 {
-	read_config(DEFAULT_CONF_PATH);
+	read_config(rat_conf_path);
 
 	close_log_file();
 
