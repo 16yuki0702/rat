@@ -13,8 +13,15 @@
 
 #define NEVENTS 16
 
-extern int start_server(rat_conf *conf);
+extern int start_server_http(rat_conf *conf);
 extern int initialize_server(rat_conf *conf);
+
+typedef struct {
+	rat_conf *conf;
+	int (*start_server)(rat_conf *conf);
+} rat_server;
+
+extern rat_server *r_server;
 
 typedef struct {
 	struct sockaddr_in s_addr;

@@ -11,6 +11,7 @@
 
 rat_conf *conf;
 char *rat_conf_path;
+rat_server *r_server;
 
 double
 rat_time(void)
@@ -126,7 +127,7 @@ main(int argc, char *argv[])
 	set_signal();
 
 	initialize_server(conf);
-	start_server(conf);
+	r_server->start_server(r_server->conf);
 	
 	return 0;
 }

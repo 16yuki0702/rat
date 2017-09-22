@@ -2,6 +2,7 @@
 #include "rat_http.h"
 
 http_request *rat_request;
+rat_server *r_server;
 
 static void
 _send_response(int c_socket)
@@ -138,11 +139,17 @@ _server_loop(rat_connection *conn)
 int
 initialize_server(rat_conf *conf)
 { 
-	(void*)conf;
+	r_server = (rat_server*)malloc(sizeof(rat_server));
+
+	if (!(strcmp(conf->protocol->data, "http"))) {
+		r_server->start_server = start_server_http;
+	}
+
+	r_server->conf = conf;
 }
 
 int
-start_server(rat_conf *conf)
+start_server_http(rat_conf *conf)
 {
 	rat_connection *conn;
 	conn = _create_connection(conf);
