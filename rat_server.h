@@ -14,6 +14,7 @@
 #define NEVENTS 16
 
 extern int start_server_http(rat_conf *conf);
+extern int start_server_mqtt(rat_conf *conf);
 extern int initialize_server(rat_conf *conf);
 
 typedef struct {
