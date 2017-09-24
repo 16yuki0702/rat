@@ -160,5 +160,8 @@ start_server_http(rat_conf *conf)
 int
 start_server_mqtt(rat_conf *conf)
 {
-	printf("start mqtt\n");
+	rat_connection *conn;
+	conn = _create_connection(conf);
+
+	return 0;
 }
