@@ -136,6 +136,56 @@ _server_loop(rat_connection *conn)
 	return 0;
 }
 
+static int
+_server_loop_mqtt(rat_connection *conn)
+{
+	rat_event *e;
+	e = _create_event(conn->s_sock);
+
+	char read_buffer[1024];
+	int i, nfds, c_len;
+
+	while (1) {
+		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
+			LOG_ERROR(("epoll_wait"));
+			return 1;
+		}
+		for (i = 0; i < nfds; i++) {
+
+			if (e->e_ret[i].data.fd != e->e.data.fd) {
+				continue;
+			}
+
+			memset(read_buffer, 0, sizeof(read_buffer));
+
+			c_len = sizeof(conn->addr);
+			if ((conn->sock = accept(conn->s_sock, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
+				LOG_ERROR(("failed open socket."));
+				return -1;
+			}
+
+			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
+				LOG_ERROR(("failed read socket."));
+				return -1;
+			}
+
+			int j, len = strlen(read_buffer);
+			for (j = 0; j < len; j++) {
+				printf("%x ", (int)read_buffer[j]);
+			}
+			printf("\n");
+
+			//_send_response(conn->sock);
+		}
+	}
+
+	close(conn->s_sock);
+
+	free(conn);
+
+	return 0;
+}
+
 int
 initialize_server(rat_conf *conf)
 { 
@@ -143,6 +193,8 @@ initialize_server(rat_conf *conf)
 
 	if (!(strcmp(conf->protocol->data, "http"))) {
 		r_server->start_server = start_server_http;
+	} else if (!(strcmp(conf->protocol->data, "mqtt"))) {
+		r_server->start_server = start_server_mqtt;
 	}
 
 	r_server->conf = conf;
@@ -163,5 +215,5 @@ start_server_mqtt(rat_conf *conf)
 	rat_connection *conn;
 	conn = _create_connection(conf);
 
-	return 0;
+	return _server_loop_mqtt(conn);
 }
