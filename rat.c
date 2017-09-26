@@ -9,6 +9,7 @@
 #include "rat_config.h"
 #include "rat_log.h"
 
+char version[] = "0.0.1";
 rat_conf *conf;
 char *rat_conf_path;
 rat_server *r_server;
@@ -86,6 +87,9 @@ parse_option(int argc, char *argv[])
 		switch (*o) {
 			case 'c' :
 				rat_conf_path = argv[i++ + 1];
+				break;
+			case 'v' :
+				printf("version %s\n", version);
 				break;
 			default :
 				fprintf(stderr, "option format error.\n");
