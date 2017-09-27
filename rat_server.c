@@ -1,5 +1,6 @@
 #include "rat_server.h"
 #include "rat_http.h"
+#include "rat_mqtt.h"
 
 http_request *rat_request;
 rat_server *r_server;
@@ -164,18 +165,7 @@ _server_loop_mqtt(rat_connection *conn)
 				return -1;
 			}
 
-			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
-				LOG_ERROR(("failed read socket."));
-				return -1;
-			}
-
-			int j, len = strlen(read_buffer);
-			for (j = 0; j < len; j++) {
-				printf("%x ", (int)read_buffer[j]);
-			}
-			printf("\n");
-
-			//_send_response(conn->sock);
+			parse_mqtt(conn->sock);
 		}
 	}
 
