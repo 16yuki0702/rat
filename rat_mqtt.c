@@ -29,5 +29,13 @@ parse_mqtt(int sock)
 
 	if (type == MQTT_CONNECT) {
 		printf("connection start\n");
+
+		// test connack packet.
+		char test[4] = {0};
+		test[0] = 32;
+		test[1] = 2;
+		test[2] = 0;
+		test[3] = 0;
+		write(sock, test, 4);
 	}
 }
