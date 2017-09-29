@@ -1,5 +1,7 @@
 #include "rat_mqtt.h"
 
+#define BUF_SIZE			1024
+
 char test1[] = "foo";
 char test2[] = "foo/bar";
 char test3[] = "foo/bar/baz";
@@ -32,6 +34,11 @@ typedef struct {
 	uint8_t *serialize_data;
 	int serialize_data_len;
 } mqtt_packet;
+
+typedef struct {
+	int8_t *d;
+	int len;
+} buf;
 
 CMP_RES
 _strcmpn(char *s1, char *s2, int len)
@@ -178,21 +185,52 @@ _serialize_mqtt_packet(mqtt_packet *p)
 	p->serialize_data_len = serial_size;
 }
 
+buf *
+_read_socket(int sock)
+{
+	int8_t tmp[BUF_SIZE];
+	int n;
+	buf *r;
+
+	r = (buf*)malloc(sizeof(buf));
+	memset(r, 0, sizeof(buf));
+
+	if ((n = read(sock, tmp, BUF_SIZE)) > 0) {
+		r->len += n;
+		r->d = (int8_t*)realloc(r->d, r->len);
+		memcpy(&r->d[r->len - n], tmp, n);
+	} else if (n == -1) {
+		LOG_ERROR(("failed read socket."));
+	}
+
+	return r;
+}
+
 void
 parse_mqtt(int sock)
 {
 	mqtt_packet *p;
-	uint8_t byte, type;
+	uint8_t cmd;
+	int8_t *rp;
+	int d_len = 0;
+	buf *b;
 
-	if (read(sock, &byte, sizeof(byte)) == -1) {
-		LOG_ERROR(("failed read socket."));
-	}
+	b = _read_socket(sock);
 
-	type = (byte & 0xF0);
+	cmd = (b->d[0] & 0xF0);
+	rp = &b->d[1];
 
-	_dec2bin(type);
+	do {
+		d_len += ((*rp & 0x7F)) << 7 * (rp - &b->d[1]);
+		printf("d_len %d\n", *rp);
+	} while ((*rp++ & 0x80) != 0);
 
-	if (type == MQTT_CONNECT) {
+	d_len += (*(--rp) & 0x7F);
+
+	printf("d_len %d\n", d_len);
+	//_dec2bin(cmd);
+	
+	if (cmd == MQTT_CONNECT) {
 		p = _create_mqtt_packet(NULL, 0, MQTT_CONNACK);
 		_serialize_mqtt_packet(p);
 		
