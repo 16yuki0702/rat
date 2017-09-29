@@ -9,8 +9,10 @@
 #include "rat_log.h"
 #include "rat_string.h"
 
-#define MQTT_CONNECT	0x10
-#define MQTT_CONNACK	0x20
+#define MQTT_CONNECT		0x10
+#define MQTT_CONNACK		0x20
+
+#define MQTT_HEADER_SIZE	2
 
 extern void parse_mqtt(int sock);
 

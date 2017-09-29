@@ -5,9 +5,9 @@ char test2[] = "foo/bar";
 char test3[] = "foo/bar/baz";
 
 typedef struct _map_entry {
-	_map_entry *root;
-	_map_entry *left;
-	_map_entry *right;
+	struct _map_entry *root;
+	struct _map_entry *left;
+	struct _map_entry *right;
 	char *data;
 } map_entry;
 
@@ -24,6 +24,14 @@ typedef enum {
 	LEFT,
 	RIGHT
 } CMP_RES;
+
+typedef struct {
+	uint8_t h1;
+	uint8_t h2;
+	uint8_t *b;
+	uint8_t *serialize_data;
+	int serialize_data_len;
+} mqtt_packet;
 
 CMP_RES
 _strcmpn(char *s1, char *s2, int len)
@@ -45,7 +53,7 @@ _strcmpn(char *s1, char *s2, int len)
 }
 
 void
-_parse_topic(char *e_data, char *t)
+_parse_topic(char *data, char *t)
 {
 	char *start;
 	int c = 0;
@@ -63,18 +71,50 @@ _parse_topic(char *e_data, char *t)
 void
 _realloc_map(int resize)
 {
-	map.roots = (map_entry**)realloc(sizeof(map_entry*) * resize);
+	map.roots = (map_entry**)realloc(map.roots, sizeof(map_entry*) * resize);
+	if (map.roots == NULL) {
+		LOG_FATAL(("exhausted memory."));
+	}
+}
+
+void
+__free_map(map_entry *e)
+{
+	if (e->left) {
+		__free_map(e->left);
+	}
+	if (e->right) {
+		__free_map(e->right);
+	}
+	free(e->data);
+	free(e);
+}
+
+void
+_free_map(int size)
+{
+	int i;
+	for (i = 0; i < size; i++) {
+		map_entry *e;
+		e = map.roots[i];
+		__free_map(e);
+	}
+	free(map.roots);
 }
 
 void
 _test_driver()
 {
 	_realloc_map(1);
-	_parse_topic(test1);
+
+	map_entry *e = map.roots[0];
+
+	_realloc_map(1);
+	_parse_topic(e->data, test1);
 	_realloc_map(2);
-	_parse_topic(test2);
+	_parse_topic(e->data, test2);
 	_realloc_map(3);
-	_parse_topic(test3);
+	_parse_topic(e->data, test3);
 }
 
 void
@@ -91,9 +131,57 @@ _dec2bin(int dec)
 	printf("%d\n", bin);
 }
 
+mqtt_packet *
+_create_mqtt_packet(uint8_t *data, int size, uint8_t state)
+{
+	mqtt_packet *p;
+	p = (mqtt_packet*)malloc(sizeof(mqtt_packet));
+	memset(p, 0, sizeof(mqtt_packet));
+
+	p->h1 |= state;
+
+	if (size == 0 || data == NULL) {
+		p->h2 = 2;
+		p->b = (uint8_t*)malloc(sizeof(uint8_t) * 2);
+		p->b[0] = 0;
+		p->b[1] = 0;
+	} else {
+		p->h2 = (size / sizeof(uint8_t));
+		strncpy(p->b, data, size);
+	}
+
+	p->serialize_data = NULL;
+	p->serialize_data_len = 0;
+
+	return p;
+}
+
+void
+_serialize_mqtt_packet(mqtt_packet *p)
+{
+	int i, serial_size;
+	uint8_t *r;
+
+	serial_size = (sizeof(uint8_t) * p->h2) + (sizeof(uint8_t) * MQTT_HEADER_SIZE);
+	p->serialize_data = (uint8_t*)malloc(serial_size);
+	memset(p->serialize_data, 0, serial_size);
+
+	r = p->serialize_data;
+
+	r[0] |= p->h1;
+	r[1] |= p->h2;
+
+	for (i = 0; i < p->h2; i++) {
+		r[i+2] |= p->b[i];
+	}
+
+	p->serialize_data_len = serial_size;
+}
+
 void
 parse_mqtt(int sock)
 {
+	mqtt_packet *p;
 	uint8_t byte, type;
 
 	if (read(sock, &byte, sizeof(byte)) == -1) {
@@ -105,14 +193,10 @@ parse_mqtt(int sock)
 	_dec2bin(type);
 
 	if (type == MQTT_CONNECT) {
-		printf("connection start\n");
-
-		// test connack packet.
-		char test[4] = {0};
-		test[0] = 32;
-		test[1] = 2;
-		test[2] = 0;
-		test[3] = 0;
-		write(sock, test, 4);
+		p = _create_mqtt_packet(NULL, 0, MQTT_CONNACK);
+		_serialize_mqtt_packet(p);
+		
+		// send connack packet.
+		write(sock, p->serialize_data, p->serialize_data_len);
 	}
 }
