@@ -225,8 +225,6 @@ parse_mqtt(int sock)
 		printf("d_len %d\n", *rp);
 	} while ((*rp++ & 0x80) != 0);
 
-	d_len += (*(--rp) & 0x7F);
-
 	printf("d_len %d\n", d_len);
 	//_dec2bin(cmd);
 	
