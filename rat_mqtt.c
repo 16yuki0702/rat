@@ -209,6 +209,7 @@ _read_socket(int sock)
 void
 parse_mqtt(int sock)
 {
+	r_mqtt_conn *r;
 	mqtt_packet *p;
 	uint8_t cmd;
 	int8_t *rp;
@@ -222,11 +223,13 @@ parse_mqtt(int sock)
 
 	do {
 		d_len += ((*rp & 0x7F)) << 7 * (rp - &b->d[1]);
-		printf("d_len %d\n", *rp);
 	} while ((*rp++ & 0x80) != 0);
 
 	printf("d_len %d\n", d_len);
 	//_dec2bin(cmd);
+	//
+	r = (r_mqtt_conn*)malloc(sizeof(r_mqtt_conn));
+	r->sock = sock;
 	
 	if (cmd == MQTT_CONNECT) {
 		p = _create_mqtt_packet(NULL, 0, MQTT_CONNACK);
@@ -234,5 +237,6 @@ parse_mqtt(int sock)
 		
 		// send connack packet.
 		write(sock, p->serialize_data, p->serialize_data_len);
+		r->sock = CONN_START;
 	}
 }
