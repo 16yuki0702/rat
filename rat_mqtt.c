@@ -275,7 +275,7 @@ void
 parse_mqtt(int sock)
 {
 	r_mqtt_packet *p;
-	uint8_t cmd, h1, *ph;
+	uint8_t h1, *ph;
 	int remain = 0, mul = 1;
 	buf *b;
 
@@ -296,7 +296,7 @@ parse_mqtt(int sock)
 
 	p->remain = remain;
 
-	switch (cmd) {
+	switch (p->cmd) {
 		case MQTT_CONNECT:
 			ph = scan_data(&p->protocol_name, ph, 2);
 
