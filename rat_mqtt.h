@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "rat.h"
 #include "rat_log.h"
 #include "rat_string.h"
