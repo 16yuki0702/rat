@@ -264,10 +264,10 @@ init_mqtt_packet()
 }
 
 static uint8_t *
-scan_data(r_str *p, uint8_t *c, uint8_t size)
+scan_data(r_str *p, uint8_t *c)
 {
 	p->l = get_uint16(c);
-	p->d = c + size;
+	p->d = c + 2;
 	return p->d + p->l;
 }
 
@@ -298,7 +298,7 @@ parse_mqtt(int sock)
 
 	switch (p->cmd) {
 		case MQTT_CONNECT:
-			ph = scan_data(&p->protocol_name, ph, 2);
+			ph = scan_data(&p->protocol_name, ph);
 
 			_send_connack(sock);
 			break;
