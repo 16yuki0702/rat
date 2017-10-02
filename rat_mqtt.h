@@ -10,20 +10,20 @@
 #include "rat_log.h"
 #include "rat_string.h"
 
-#define MQTT_CONNECT		0x10
-#define MQTT_CONNACK		0x20
-#define MQTT_PUBLISH		0x30
-#define MQTT_PUBACK		0x40
-#define MQTT_PUBREC		0x50
-#define MQTT_PUBREL		0x60
-#define MQTT_PUBCOMP		0x70
-#define MQTT_SUBSCRIBE		0x80
-#define MQTT_SUBACK		0x90
-#define MQTT_UNSUBSCRIBE	0xA0
-#define MQTT_UNSUBACK		0xB0
-#define MQTT_PINGREQ		0xC0
-#define MQTT_PINGRESP		0xD0
-#define MQTT_DISCONECT		0xE0
+#define MQTT_CONNECT		0x01
+#define MQTT_CONNACK		0x02
+#define MQTT_PUBLISH		0x03
+#define MQTT_PUBACK		0x04
+#define MQTT_PUBREC		0x05
+#define MQTT_PUBREL		0x06
+#define MQTT_PUBCOMP		0x07
+#define MQTT_SUBSCRIBE		0x08
+#define MQTT_SUBACK		0x09
+#define MQTT_UNSUBSCRIBE	0x0A
+#define MQTT_UNSUBACK		0x0B
+#define MQTT_PINGREQ		0x0C
+#define MQTT_PINGRESP		0x0D
+#define MQTT_DISCONECT		0x0E
 
 #define MQTT_HEADER_SIZE	2
 

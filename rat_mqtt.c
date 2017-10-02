@@ -206,40 +206,101 @@ _read_socket(int sock)
 	return r;
 }
 
+#define MQTT_CONNACK_REMAINLEN	2
+
+#define MQTT_GET_CMD(f)		(((f) & 0xF0) >> 4)
+#define MQTT_GET_DUP(f)		(((f) & 0x08) >> 3)
+#define MQTT_GET_QOS(f)		(((f) & 0x06) >> 1)
+#define MQTT_GET_RETAIN(f)	((f)  & 0x01)
+//#define MQTT_CALC_REMAIN(r)			\
+
+typedef enum {
+	CONNACK_ALLOW,
+	CONNACK_DENY_PROTOCOL,
+	CONNACK_DENY_ID,
+	CONNACK_DENY_SERVER_ERROR,
+	CONNACK_DENY_AUTH_FAILURE,
+	CONNACK_DENY_NOT_PERMITTED
+} MQTT_CONNACK_RC;
+
+void
+_send_connack(int sock)
+{
+	char p[4] = {0};
+	p[0] = MQTT_CONNACK;
+	p[1] = MQTT_CONNACK_REMAINLEN;
+	p[2] = 0;
+	p[3] = CONNACK_ALLOW;
+
+	write(sock, p, 4);
+}
+
+typedef struct {
+	uint8_t cmd:4;
+	uint8_t dup:1;
+	uint8_t qos:2;
+	uint8_t retain:1;
+	uint32_t remain;
+	r_str protocol_name;
+	uint8_t protocol_version;
+	uint8_t connect_flags;
+	uint16_t keepalive_timer;
+} r_mqtt_packet;
+
+static uint16_t
+get_uint16(char *p)
+{
+	uint8_t *tmp = (uint8_t *)p;
+	return (tmp[0] << 8) + tmp[1];
+}
+
+static r_mqtt_packet *
+init_mqtt_packet()
+{
+	r_mqtt_packet *p;
+	p = (r_mqtt_packet*)malloc(sizeof(r_mqtt_packet));
+	memset(p, 0, sizeof(r_mqtt_packet));
+	return p;
+}
+
+static uint8_t *
+scan_data(r_str *p, uint8_t *c, uint8_t size)
+{
+	p->l = get_uint16(c);
+	p->d = c + size;
+	return p->d + p->l;
+}
+
 void
 parse_mqtt(int sock)
 {
-	r_mqtt_conn *r;
-	mqtt_packet *p;
-	uint8_t cmd;
-	int8_t *rp;
-	int d_len = 0, mul = 1;
+	r_mqtt_packet *p;
+	uint8_t cmd, h1, *ph;
+	int remain = 0, mul = 1;
 	buf *b;
 
 	b = _read_socket(sock);
+	h1 = b->d[0];
+	ph = &b->d[1];
 
-	cmd = (b->d[0] & 0xF0);
-	rp = &b->d[1];
+	p = init_mqtt_packet();
+	p->cmd = MQTT_GET_CMD(h1);
+	p->dup = MQTT_GET_DUP(h1);
+	p->qos = MQTT_GET_QOS(h1);
+	p->retain = MQTT_GET_RETAIN(h1);
 
 	do {
-		d_len += (*rp & 0x7F) * mul;
+		remain += (*ph & 0x7F) * mul;
 		mul <<= 7;
-	} while ((*rp++ & 0x80) != 0);
+	} while ((*ph++ & 0x80) != 0);
 
-	printf("d_len %d\n", d_len);
-	//_dec2bin(cmd);
+	p->remain = remain;
 
-	r = (r_mqtt_conn*)malloc(sizeof(r_mqtt_conn));
-	r->sock = sock;
-	
 	switch (cmd) {
 		case MQTT_CONNECT:
-			p = _create_mqtt_packet(NULL, 0, MQTT_CONNACK);
-			_serialize_mqtt_packet(p);
-		
-			// send connack packet.
-			write(sock, p->serialize_data, p->serialize_data_len);
-			r->sock = CONN_START;
+			ph = scan_data(&p->protocol_name, ph, 2);
+
+			_send_connack(sock);
 			break;
 		default:
 			break;

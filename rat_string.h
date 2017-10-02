@@ -11,6 +11,11 @@ typedef struct {
 	size_t len;
 } rat_str;
 
+typedef struct {
+	char *d;
+	size_t l;
+} r_str;
+
 #define rat_string(str)		({ (char *)str, sizeof(str) - 1 })
 #define rat_null_string(str)	({ NULL, 0 })
 #define RAT_STR_CPY(c1, c2)						\
