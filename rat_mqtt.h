@@ -30,7 +30,7 @@
 extern void parse_mqtt(int sock);
 
 typedef enum {
-	CONN_START
+	CONNECTING
 } r_mqtt_state;
 
 typedef struct {

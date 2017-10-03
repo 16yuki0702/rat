@@ -2,6 +2,23 @@
 
 #define BUF_SIZE			1024
 
+typedef struct {
+	uint8_t cmd:4;
+	uint8_t dup:1;
+	uint8_t qos:2;
+	uint8_t retain:1;
+	uint32_t remain;
+	r_str protocol_name;
+	uint8_t protocol_version;
+	uint8_t connect_flags;
+	uint16_t keepalive_timer;
+	r_str client_id;
+	r_str will_topic;
+	r_str will_message;
+	r_str username;
+	r_str password;
+} r_mqtt_packet;
+
 char test1[] = "foo";
 char test2[] = "foo/bar";
 char test3[] = "foo/bar/baz";
@@ -212,6 +229,9 @@ _read_socket(int sock)
 #define MQTT_GET_DUP(f)		(((f) & 0x08) >> 3)
 #define MQTT_GET_QOS(f)		(((f) & 0x06) >> 1)
 #define MQTT_GET_RETAIN(f)	((f)  & 0x01)
+#define MQTT_IS_WILL		0x04
+#define MQTT_IS_USERNAME	0x40
+#define MQTT_IS_PASSWORD	0x80
 
 typedef enum {
 	CONNACK_ALLOW,
@@ -223,28 +243,17 @@ typedef enum {
 } MQTT_CONNACK_RC;
 
 void
-_send_connack(int sock)
+_send_connack(int sock, r_mqtt_packet *p)
 {
-	char p[4] = {0};
-	p[0] = MQTT_CONNACK << 4;
-	p[1] = MQTT_CONNACK_REMAINLEN;
-	p[2] = 0;
-	p[3] = CONNACK_ALLOW;
+	char rp[4] = {0};
+	rp[0] = MQTT_CONNACK << 4;
+	rp[1] = MQTT_CONNACK_REMAINLEN;
+	rp[2] = 0;
+	rp[3] = CONNACK_ALLOW;
 
-	write(sock, p, 4);
+	write(sock, rp, 4);
+	(void*)p;
 }
-
-typedef struct {
-	uint8_t cmd:4;
-	uint8_t dup:1;
-	uint8_t qos:2;
-	uint8_t retain:1;
-	uint32_t remain;
-	r_str protocol_name;
-	uint8_t protocol_version;
-	uint8_t connect_flags;
-	uint16_t keepalive_timer;
-} r_mqtt_packet;
 
 static uint16_t
 get_uint16(uint8_t *p)
@@ -301,8 +310,19 @@ parse_mqtt(int sock)
 			p->protocol_version = *ph++;
 			p->connect_flags = *ph++;
 			p->keepalive_timer = get_uint16(ph);
-
-			_send_connack(sock);
+			ph += 2;
+			ph = scan_data(&p->client_id, ph);
+			if (p->connect_flags & MQTT_IS_WILL) {
+				ph = scan_data(&p->will_topic, ph);
+				ph = scan_data(&p->will_message, ph);
+			}
+			if (p->connect_flags & MQTT_IS_USERNAME) {
+				ph = scan_data(&p->username, ph);
+			}
+			if (p->connect_flags & MQTT_IS_PASSWORD) {
+				ph = scan_data(&p->password, ph);
+			}
+			_send_connack(sock, p);
 			break;
 		default:
 			break;
