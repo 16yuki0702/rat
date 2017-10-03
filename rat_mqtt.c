@@ -212,7 +212,6 @@ _read_socket(int sock)
 #define MQTT_GET_DUP(f)		(((f) & 0x08) >> 3)
 #define MQTT_GET_QOS(f)		(((f) & 0x06) >> 1)
 #define MQTT_GET_RETAIN(f)	((f)  & 0x01)
-//#define MQTT_CALC_REMAIN(r)			\
 
 typedef enum {
 	CONNACK_ALLOW,
@@ -227,7 +226,7 @@ void
 _send_connack(int sock)
 {
 	char p[4] = {0};
-	p[0] = MQTT_CONNACK;
+	p[0] = MQTT_CONNACK << 4;
 	p[1] = MQTT_CONNACK_REMAINLEN;
 	p[2] = 0;
 	p[3] = CONNACK_ALLOW;
@@ -248,9 +247,9 @@ typedef struct {
 } r_mqtt_packet;
 
 static uint16_t
-get_uint16(char *p)
+get_uint16(uint8_t *p)
 {
-	uint8_t *tmp = (uint8_t *)p;
+	uint8_t *tmp = p;
 	return (tmp[0] << 8) + tmp[1];
 }
 
@@ -299,6 +298,9 @@ parse_mqtt(int sock)
 	switch (p->cmd) {
 		case MQTT_CONNECT:
 			ph = scan_data(&p->protocol_name, ph);
+			p->protocol_version = *ph++;
+			p->connect_flags = *ph++;
+			p->keepalive_timer = get_uint16(ph);
 
 			_send_connack(sock);
 			break;
