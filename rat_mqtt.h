@@ -23,7 +23,7 @@
 #define MQTT_UNSUBACK		0x0B
 #define MQTT_PINGREQ		0x0C
 #define MQTT_PINGRESP		0x0D
-#define MQTT_DISCONECT		0x0E
+#define MQTT_DISCONNECT		0x0E
 
 #define MQTT_HEADER_SIZE	2
 

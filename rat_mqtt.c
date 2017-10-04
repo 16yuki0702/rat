@@ -303,9 +303,11 @@ parse_mqtt(int sock)
 	} while ((*ph++ & 0x80) != 0);
 
 	p->remain = remain;
+	printf("cmd = %d\n", p->cmd);
 
 	switch (p->cmd) {
 		case MQTT_CONNECT:
+			printf("(test) connect mqtt\n");
 			ph = scan_data(&p->protocol_name, ph);
 			p->protocol_version = *ph++;
 			p->connect_flags = *ph++;
@@ -324,6 +326,9 @@ parse_mqtt(int sock)
 			}
 			_send_connack(sock, p);
 			break;
+		case MQTT_DISCONNECT:
+			printf("(test) disconnect mqtt\n");
+			close(sock);
 		default:
 			break;
 	}
