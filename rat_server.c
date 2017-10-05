@@ -119,6 +119,18 @@ _server_loop(rat_connection *conn)
 				return -1;
 			}
 
+			memset(&e->e, 0, sizeof(e->e));
+			e->e.events = EPOLLIN | EPOLLONESHOT;
+			if (e->e.data.ptr == NULL) {
+				perror("malloc");
+				return 1;
+			}
+
+			if (epoll_ctl(e->efd, EPOLL_CTL_ADD, conn->sock, &e->e) != 0) {
+				 perror("epoll_ctl");
+				 return 1;
+			}
+
 			if (read(conn->sock, read_buffer, sizeof(read_buffer)) == -1) {
 				LOG_ERROR(("failed read socket."));
 				return -1;
