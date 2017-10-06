@@ -17,6 +17,8 @@ typedef struct {
 	r_str will_message;
 	r_str username;
 	r_str password;
+	uint16_t message_id;
+	r_str payload;
 } r_mqtt_packet;
 
 char test1[] = "foo";
@@ -290,7 +292,7 @@ void
 parse_mqtt(int sock)
 {
 	r_mqtt_packet *p;
-	uint8_t h1, *ph;
+	uint8_t h1, *ph, *end;
 	int remain = 0, mul = 1;
 	buf *b;
 
@@ -310,6 +312,7 @@ parse_mqtt(int sock)
 	} while ((*ph++ & 0x80) != 0);
 
 	p->remain = remain;
+	end = ph + remain;
 
 	switch (p->cmd) {
 		case MQTT_CONNECT:
@@ -331,6 +334,12 @@ parse_mqtt(int sock)
 			}
 			_send_connack(sock, p);
 			break;
+		case MQTT_SUBSCRIBE:
+			printf("subscribe\n");
+			p->message_id = get_uint16(ph);
+			ph += 2;
+			p->payload.d = ph;
+			p->payload.l = (size_t)(end - ph);
 		case MQTT_DISCONNECT:
 			close(sock);
 			break;
