@@ -38,4 +38,19 @@ typedef struct {
 	struct epoll_event e_ret[NEVENTS];
 } rat_event;
 
+typedef struct {
+	int sock;
+	struct sockaddr_in addr;
+	struct epoll_event e;
+} r_connection;
+
+typedef struct {
+	int efd;
+	struct epoll_event e;
+	struct epoll_event e_ret[NEVENTS];
+	int sock;
+	struct sockaddr_in addr;
+	rat_conf *conf;
+} r_listener;
+
 #endif

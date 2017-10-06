@@ -91,6 +91,71 @@ _create_event(int sock)
 	return event;
 }
 
+static r_listener*
+_create_listener(rat_conf *conf)
+{
+	int on = 1;
+	r_listener *l;
+
+	l = (r_listener*)malloc(sizeof(r_listener));
+
+	l->sock = socket(AF_INET, SOCK_STREAM, 0);
+	l->addr.sin_family = AF_INET;
+	l->addr.sin_port = htons(conf->port);
+	l->addr.sin_addr.s_addr = INADDR_ANY;
+	ioctl(l->sock, FIONBIO, &on);
+	fcntl(l->sock, F_SETFD, FD_CLOEXEC);
+
+	if (conf->socket_reuse) {
+		setsockopt(l->sock, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
+	}
+
+	if (bind(l->sock, (struct sockaddr *)&l->addr, sizeof(l->addr)) != 0) {
+		LOG_ERROR(("failed bind socket."));
+		close(l->sock);
+		free(l);
+		return NULL;
+	}
+
+	if (listen(l->sock, conf->backlog) != 0) {
+		LOG_ERROR(("failed listen socket."));
+		close(l->sock);
+		free(l);
+		return NULL;
+	}
+
+	if ((l->efd = epoll_create(NEVENTS)) < 0) {
+		LOG_ERROR(("epoll_create"));
+		return l;
+	}
+
+	memset(&l->e, 0, sizeof(l->e));	
+	l->e.events = EPOLLIN;
+	l->e.data.fd = l->sock;
+	if (epoll_ctl(l->efd, EPOLL_CTL_ADD, l->sock, &l->e)) {
+		LOG_ERROR(("epoll_ctl"));
+		return NULL;
+	}
+
+	l->conf = conf;
+
+	return l;
+}
+
+static r_connection *
+_create_new_connection(int sock)
+{
+	r_connection *c;
+	c = (r_connection*)malloc(sizeof(r_connection));
+	memset(c, 0, sizeof(c));
+
+	c->sock = sock;
+	c->e.events = EPOLLIN | EPOLLOUT;
+	c->e.data.fd = sock;
+
+	return c;
+}
+
 static int
 _server_loop(rat_connection *conn)
 {
@@ -121,10 +186,6 @@ _server_loop(rat_connection *conn)
 
 			memset(&e->e, 0, sizeof(e->e));
 			e->e.events = EPOLLIN | EPOLLONESHOT;
-			if (e->e.data.ptr == NULL) {
-				perror("malloc");
-				return 1;
-			}
 
 			if (epoll_ctl(e->efd, EPOLL_CTL_ADD, conn->sock, &e->e) != 0) {
 				 perror("epoll_ctl");
@@ -150,40 +211,43 @@ _server_loop(rat_connection *conn)
 }
 
 static int
-_server_loop_mqtt(rat_connection *conn)
+_server_loop_mqtt(r_listener *l)
 {
-	rat_event *e;
-	e = _create_event(conn->s_sock);
-
+	r_connection *c;
 	char read_buffer[1024];
-	int i, nfds, c_len;
+	int i, nfds, c_len, client;
 
 	while (1) {
-		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
+		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
 			LOG_ERROR(("epoll_wait"));
-			return 1;
+			return -1;
 		}
 		for (i = 0; i < nfds; i++) {
 
-			if (e->e_ret[i].data.fd != e->e.data.fd) {
-				continue;
+			if (l->e_ret[i].data.fd == l->e.data.fd) {
+				memset(read_buffer, 0, sizeof(read_buffer));
+				c_len = sizeof(l->addr);
+				if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
+					LOG_ERROR(("failed open socket."));
+					return -1;
+				}
+
+				c = _create_new_connection(client);
+
+				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &c->e) != 0) {
+					perror("epoll_ctl");
+					return -1;
+				}
+
+			} else {
+				parse_mqtt(l->e_ret[i].data.fd);
 			}
-
-			memset(read_buffer, 0, sizeof(read_buffer));
-
-			c_len = sizeof(conn->addr);
-			if ((conn->sock = accept(conn->s_sock, (struct sockaddr *)&conn->addr, &c_len)) == -1) {
-				LOG_ERROR(("failed open socket."));
-				return -1;
-			}
-
-			parse_mqtt(conn->sock);
 		}
 	}
 
-	close(conn->s_sock);
+	close(l->sock);
 
-	free(conn);
+	free(l);
 
 	return 0;
 }
@@ -214,8 +278,8 @@ start_server_http(rat_conf *conf)
 int
 start_server_mqtt(rat_conf *conf)
 {
-	rat_connection *conn;
-	conn = _create_connection(conf);
+	r_listener *l;
+	l = _create_listener(conf);
 
-	return _server_loop_mqtt(conn);
+	return _server_loop_mqtt(l);
 }

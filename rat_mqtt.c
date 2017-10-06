@@ -57,6 +57,13 @@ typedef struct {
 	int len;
 } buf;
 
+void
+free_buf(buf *b)
+{
+	free(b->d);
+	free(b);
+}
+
 CMP_RES
 _strcmpn(char *s1, char *s2, int len)
 {
@@ -303,11 +310,9 @@ parse_mqtt(int sock)
 	} while ((*ph++ & 0x80) != 0);
 
 	p->remain = remain;
-	printf("cmd = %d\n", p->cmd);
 
 	switch (p->cmd) {
 		case MQTT_CONNECT:
-			printf("(test) connect mqtt\n");
 			ph = scan_data(&p->protocol_name, ph);
 			p->protocol_version = *ph++;
 			p->connect_flags = *ph++;
@@ -327,9 +332,12 @@ parse_mqtt(int sock)
 			_send_connack(sock, p);
 			break;
 		case MQTT_DISCONNECT:
-			printf("(test) disconnect mqtt\n");
 			close(sock);
+			break;
 		default:
+			send(sock, "test", 4);
 			break;
 	}
+
+	free_buf(b);
 }
