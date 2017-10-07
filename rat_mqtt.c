@@ -19,6 +19,7 @@ typedef struct {
 	r_str password;
 	uint16_t message_id;
 	r_str payload;
+	r_str topic;
 } r_mqtt_packet;
 
 char test1[] = "foo";
@@ -340,6 +341,15 @@ parse_mqtt(int sock)
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
+			break;
+		case MQTT_PUBLISH:
+			printf("publish\n");
+			ph = scan_data(&p->topic, ph);
+			p->message_id = get_uint16(ph);
+			ph += 2;
+			p->payload.d = ph;
+			p->payload.l = (size_t)(end - ph);
+			break;
 		case MQTT_DISCONNECT:
 			close(sock);
 			break;
