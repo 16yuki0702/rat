@@ -1,7 +1,5 @@
 #include "rat_mqtt.h"
 
-#define BUF_SIZE			1024
-
 typedef struct {
 	uint8_t cmd:4;
 	uint8_t dup:1;
@@ -232,16 +230,6 @@ _read_socket(int sock)
 
 	return r;
 }
-
-#define MQTT_CONNACK_REMAINLEN	2
-
-#define MQTT_GET_CMD(f)		(((f) & 0xF0) >> 4)
-#define MQTT_GET_DUP(f)		(((f) & 0x08) >> 3)
-#define MQTT_GET_QOS(f)		(((f) & 0x06) >> 1)
-#define MQTT_GET_RETAIN(f)	((f)  & 0x01)
-#define MQTT_IS_WILL		0x04
-#define MQTT_IS_USERNAME	0x40
-#define MQTT_IS_PASSWORD	0x80
 
 typedef enum {
 	CONNACK_ALLOW,
