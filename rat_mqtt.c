@@ -1,25 +1,5 @@
 #include "rat_mqtt.h"
 
-typedef struct {
-	uint8_t cmd:4;
-	uint8_t dup:1;
-	uint8_t qos:2;
-	uint8_t retain:1;
-	uint32_t remain;
-	r_str protocol_name;
-	uint8_t protocol_version;
-	uint8_t connect_flags;
-	uint16_t keepalive_timer;
-	r_str client_id;
-	r_str will_topic;
-	r_str will_message;
-	r_str username;
-	r_str password;
-	uint16_t message_id;
-	r_str payload;
-	r_str topic;
-} r_mqtt_packet;
-
 char test1[] = "foo";
 char test2[] = "foo/bar";
 char test3[] = "foo/bar/baz";
