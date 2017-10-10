@@ -258,12 +258,14 @@ scan_data(r_str *p, uint8_t *c)
 }
 
 void
-parse_mqtt(int sock)
+parse_mqtt(r_connection *c)
 {
 	r_mqtt_packet *p;
 	uint8_t h1, *ph, *end;
-	int remain = 0, mul = 1;
+	int remain = 0, mul = 1, sock;
 	buf *b;
+
+	sock = c->sock;
 
 	b = _read_socket(sock);
 	h1 = b->d[0];
@@ -322,7 +324,7 @@ parse_mqtt(int sock)
 			close(sock);
 			break;
 		default:
-			send(sock, "test", 4);
+			send(sock, "test", 4, 0);
 			break;
 	}
 

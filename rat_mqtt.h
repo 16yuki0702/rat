@@ -11,6 +11,7 @@
 #include "rat.h"
 #include "rat_log.h"
 #include "rat_string.h"
+#include "rat_server.h"
 
 #define MQTT_CONNECT		0x01
 #define MQTT_CONNACK		0x02
@@ -38,7 +39,7 @@
 #define MQTT_IS_USERNAME	0x40
 #define MQTT_IS_PASSWORD	0x80
 
-extern void parse_mqtt(int sock);
+extern void parse_mqtt(r_connection *c);
 
 typedef enum {
 	CONNECTING

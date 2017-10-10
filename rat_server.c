@@ -240,7 +240,7 @@ _server_loop_mqtt(r_listener *l)
 				}
 
 			} else {
-				parse_mqtt(l->e_ret[i].data.fd);
+				parse_mqtt(c);
 			}
 		}
 	}
