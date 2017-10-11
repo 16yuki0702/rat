@@ -53,4 +53,9 @@ typedef struct {
 	rat_conf *conf;
 } r_listener;
 
+typedef struct {
+	r_connection *r_list;
+	r_listener listener;
+} r_mqtt_manager;
+
 #endif
