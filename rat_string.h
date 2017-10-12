@@ -21,6 +21,15 @@ typedef struct {
 #define RAT_STR_CPY(c1, c2)						\
 	strncpy(c1, c2, strlen(c2));					\
 	c1[strlen(c2)] = '\0';
+#define DUMP_STR(s)							\
+	do {								\
+		int ii;							\
+		for (ii = 0; ii < s.l; ii++) {				\
+			printf("%c", s.d[ii]);				\
+		}							\
+		printf("\n");						\
+	} while (0)
+
 
 extern void rat_str_trim(char *str);
 

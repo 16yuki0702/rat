@@ -257,6 +257,19 @@ scan_data(r_str *p, uint8_t *c)
 	return p->d + p->l;
 }
 
+static void
+handle_subscribe(r_mqtt_packet *p)
+{
+	p->topic.l = p->payload.d[0] << 8 | p->payload.d[1];
+	p->topic.d = p->payload.d + 2;
+	p->qos = p->payload.d[2 + p->topic.l];
+	
+	printf("topic dump\n");
+	DUMP_STR(p->topic);
+	printf("topic qos\n");
+	printf("%d\n", p->qos);
+}
+
 void
 parse_mqtt(r_connection *c)
 {
@@ -306,14 +319,13 @@ parse_mqtt(r_connection *c)
 			_send_connack(sock, p);
 			break;
 		case MQTT_SUBSCRIBE:
-			printf("subscribe\n");
 			p->message_id = get_uint16(ph);
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
+			handle_subscribe(p);
 			break;
 		case MQTT_PUBLISH:
-			printf("publish\n");
 			ph = scan_data(&p->topic, ph);
 			p->message_id = get_uint16(ph);
 			ph += 2;
