@@ -1,6 +1,7 @@
 #ifndef RAT_SERVER_H
 #define RAT_SERVER_H
 
+#include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -55,6 +56,7 @@ typedef struct {
 
 typedef struct {
 	r_connection *r_list;
+	uint32_t c_count;
 	r_listener listener;
 } r_mqtt_manager;
 

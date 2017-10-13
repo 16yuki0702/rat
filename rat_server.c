@@ -214,8 +214,11 @@ static int
 _server_loop_mqtt(r_listener *l)
 {
 	r_connection *c;
+	r_mqtt_manager *mng;
 	char read_buffer[1024];
 	int i, nfds, c_len, client;
+
+	memset(mng, 0, sizeof(r_mqtt_manager));
 
 	while (1) {
 		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
@@ -233,6 +236,8 @@ _server_loop_mqtt(r_listener *l)
 				}
 
 				c = _create_new_connection(client);
+				mng->c_count++;
+				mng->r_list = (r_connection*)realloc(mng->r_list, sizeof(r_connection) * mng->c_count);
 
 				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &c->e) != 0) {
 					perror("epoll_ctl");
