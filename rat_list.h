@@ -1,6 +1,8 @@
 #ifndef RAT_LIST_H
 #define RAT_LIST_H
 
+extern r_list *root_list;
+
 typedef struct _list {
 	void *data;
 	_list *prev;
