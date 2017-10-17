@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include "rat_http.h"
 #include "rat_config.h"
+#include "rat_list.h"
 
 #define NEVENTS 16
 
@@ -55,7 +56,7 @@ typedef struct {
 } r_listener;
 
 typedef struct {
-	r_connection *r_list;
+	r_list *list;
 	uint32_t c_count;
 	r_listener listener;
 } r_mqtt_manager;

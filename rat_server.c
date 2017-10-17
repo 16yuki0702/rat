@@ -213,11 +213,12 @@ _server_loop(rat_connection *conn)
 static int
 _server_loop_mqtt(r_listener *l)
 {
-	r_connection *c;
+	r_connection *entry;
 	r_mqtt_manager *mng;
 	char read_buffer[1024];
 	int i, nfds, c_len, client;
 
+	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
 	memset(mng, 0, sizeof(r_mqtt_manager));
 
 	while (1) {
@@ -235,17 +236,18 @@ _server_loop_mqtt(r_listener *l)
 					return -1;
 				}
 
-				c = _create_new_connection(client);
+				entry = _create_new_connection(client);
 				mng->c_count++;
-				mng->r_list = (r_connection*)realloc(mng->r_list, sizeof(r_connection) * mng->c_count);
+				LIST_INIT(mng->list);
+				LIST_ENTRY(mng->list, entry);
 
-				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &c->e) != 0) {
+				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &entry->e) != 0) {
 					perror("epoll_ctl");
 					return -1;
 				}
 
 			} else {
-				parse_mqtt(c);
+				parse_mqtt(entry);
 			}
 		}
 	}

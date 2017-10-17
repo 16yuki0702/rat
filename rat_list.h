@@ -1,29 +1,28 @@
 #ifndef RAT_LIST_H
 #define RAT_LIST_H
 
-extern r_list *root_list;
-
 typedef struct _list {
 	void *data;
-	_list *prev;
-	_list *next;
+	struct _list *prev;
+	struct _list *next;
 } r_list;
 
-#define LIST_INIT (x)						\
+#define LIST_INIT(list)						\
 	do {							\
-		x->data = NULL;					\
-		x->prev = NULL;					\
-		x->next = NULL;					\
+		list = (r_list*)malloc(sizeof(r_list));		\	
+		list->data = NULL;				\
+		list->prev = NULL;				\
+		list->next = NULL;				\
 	} while (0)
 
-#define LIST_ENTRY (x, d)					\
+#define LIST_ENTRY(list, entry)					\
 	do {							\
-		r_list *tmplist = x;				\
+		r_list *tmplist = list;				\
 		while (tmplist) {				\
 			if (tmplist->data) {			\
-				tmplist = tmlist->next;		\
+				tmplist = tmplist->next;	\
 			} else {				\
-				tmplist->data = d;		\
+				tmplist->data = entry;		\
 				break;				\
 			}					\
 		}						\
