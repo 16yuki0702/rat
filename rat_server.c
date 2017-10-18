@@ -240,6 +240,7 @@ _server_loop_mqtt(r_listener *l)
 				mng->c_count++;
 				LIST_INIT(mng->list);
 				LIST_ADD(mng->list, entry);
+				LIST_DUMP(mng->list);
 
 				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &entry->e) != 0) {
 					perror("epoll_ctl");

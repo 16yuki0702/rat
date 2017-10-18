@@ -2,6 +2,7 @@
 #define RAT_LIST_H
 
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef struct _list {
 	void *data;
@@ -33,6 +34,17 @@ typedef struct _list {
 				tmplist->data = entry;							\
 				break;									\
 			}										\
+		}											\
+	} while (0)
+
+#define LIST_DUMP(list)											\
+	do {												\
+		r_list *tmplist = list;									\
+		while (tmplist) {									\
+			if (tmplist->data) {								\
+				printf("list data %d\n", *(int*)tmplist->data);				\
+			}										\
+			tmplist = tmplist->next;							\
 		}											\
 	} while (0)
 
