@@ -239,7 +239,7 @@ _server_loop_mqtt(r_listener *l)
 				entry = _create_new_connection(client);
 				mng->c_count++;
 				LIST_INIT(mng->list);
-				LIST_ENTRY(mng->list, entry);
+				LIST_ADD(mng->list, entry);
 
 				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &entry->e) != 0) {
 					perror("epoll_ctl");
