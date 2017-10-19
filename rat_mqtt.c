@@ -260,14 +260,16 @@ scan_data(r_str *p, uint8_t *c)
 static void
 handle_subscribe(r_mqtt_packet *p)
 {
+	uint8_t qs[512], i, n;
 	p->topic.l = p->payload.d[0] << 8 | p->payload.d[1];
 	p->topic.d = p->payload.d + 2;
 	p->qos = p->payload.d[2 + p->topic.l];
-	
-	printf("topic dump\n");
-	DUMP_STR(p->topic);
-	printf("topic qos\n");
-	printf("%d\n", p->qos);
+	while (p->payload.l >= i) {
+		p->topic.l = p->payload.d[i] << 8 | p->payload.d[i + 1];
+		p->topic.d = p->payload.d + (i + 2);
+		i += 2 + p->topic.l;
+		qs[n++] = p->payload.d[i];
+	}
 }
 
 void
