@@ -26,14 +26,6 @@ typedef enum {
 } CMP_RES;
 
 typedef struct {
-	uint8_t h1;
-	uint8_t h2;
-	uint8_t *b;
-	uint8_t *serialize_data;
-	int serialize_data_len;
-} mqtt_packet;
-
-typedef struct {
 	int8_t *d;
 	int len;
 } buf;
@@ -143,53 +135,6 @@ _dec2bin(int dec)
 	printf("%d\n", bin);
 }
 
-mqtt_packet *
-_create_mqtt_packet(uint8_t *data, int size, uint8_t state)
-{
-	mqtt_packet *p;
-	p = (mqtt_packet*)malloc(sizeof(mqtt_packet));
-	memset(p, 0, sizeof(mqtt_packet));
-
-	p->h1 |= state;
-
-	if (size == 0 || data == NULL) {
-		p->h2 = 2;
-		p->b = (uint8_t*)malloc(sizeof(uint8_t) * 2);
-		p->b[0] = 0;
-		p->b[1] = 0;
-	} else {
-		p->h2 = (size / sizeof(uint8_t));
-		strncpy(p->b, data, size);
-	}
-
-	p->serialize_data = NULL;
-	p->serialize_data_len = 0;
-
-	return p;
-}
-
-void
-_serialize_mqtt_packet(mqtt_packet *p)
-{
-	int i, serial_size;
-	uint8_t *r;
-
-	serial_size = (sizeof(uint8_t) * p->h2) + (sizeof(uint8_t) * MQTT_HEADER_SIZE);
-	p->serialize_data = (uint8_t*)malloc(serial_size);
-	memset(p->serialize_data, 0, serial_size);
-
-	r = p->serialize_data;
-
-	r[0] |= p->h1;
-	r[1] |= p->h2;
-
-	for (i = 0; i < p->h2; i++) {
-		r[i+2] |= p->b[i];
-	}
-
-	p->serialize_data_len = serial_size;
-}
-
 buf *
 _read_socket(int sock)
 {
@@ -221,7 +166,7 @@ typedef enum {
 } MQTT_CONNACK_RC;
 
 void
-_send_connack(int sock, r_mqtt_packet *p)
+_send_connack(uint32_t sock, r_mqtt_packet *p)
 {
 	char rp[4] = {0};
 	rp[0] = MQTT_CONNACK << 4;
@@ -257,19 +202,74 @@ scan_data(r_str *p, uint8_t *c)
 	return p->d + p->l;
 }
 
-static void
-handle_subscribe(r_mqtt_packet *p)
+uint8_t
+add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t qos, uint32_t len)
 {
-	uint8_t qs[512], i, n;
+	uint8_t header[5];
+	uint8_t i = 1, remain, resize;
+	uint8_t *tmp;
+
+	header[0] = (cmd << 4) | (qos << 1);
+	remain = len;
+
+	do {
+		header[i] = remain % 0x80;
+		remain /= 0x80;
+		if (remain > 0) {
+			header[i] |= 0x80;
+		}
+		i++;
+	} while (remain > 0);
+
+	resize = i + len;
+
+	tmp = (uint8_t*)realloc(dst, resize);
+	if (tmp == NULL) {
+		printf("memory allocate error.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	dst = tmp;
+
+	memmove(dst + i, dst, len);
+	memcpy(dst, header, i);
+
+	return resize;
+}
+
+static void
+handle_subscribe(uint32_t sock, r_mqtt_packet *p)
+{
+	uint8_t qs[512];
+	uint8_t n, *res;
+	uint32_t t_len, m_len, r_size, pos, len;
+	uint8_t qos = 1;
+	uint16_t m;
+
+	// TODO store the topic data relating each conneciton to.
+/*
 	p->topic.l = p->payload.d[0] << 8 | p->payload.d[1];
 	p->topic.d = p->payload.d + 2;
 	p->qos = p->payload.d[2 + p->topic.l];
-	while (p->payload.l >= i) {
-		p->topic.l = p->payload.d[i] << 8 | p->payload.d[i + 1];
-		p->topic.d = p->payload.d + (i + 2);
-		i += 2 + p->topic.l;
-		qs[n++] = p->payload.d[i];
+*/
+	pos = 0;
+
+	while (p->payload.l > pos) {
+		t_len = p->payload.d[pos] << 8 | p->payload.d[pos + 1];
+		pos += 2 + t_len;
+		qs[n++] = p->payload.d[pos++];
 	}
+
+	m_len = sizeof(p->message_id);
+	m = htons(p->message_id);
+	r_size = m_len + n;
+
+	res = (uint8_t*)malloc(sizeof(uint8_t) * (r_size));
+	memcpy(res, &m, m_len);
+	memcpy(res + m_len, qs, n);
+	len = add_mqtt_header(res, MQTT_SUBACK, qos, r_size);
+
+	write(sock, res, len);
 }
 
 void
@@ -325,7 +325,7 @@ parse_mqtt(r_connection *c)
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_subscribe(p);
+			handle_subscribe(sock, p);
 			break;
 		case MQTT_PUBLISH:
 			ph = scan_data(&p->topic, ph);
