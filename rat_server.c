@@ -150,7 +150,7 @@ _create_new_connection(int sock)
 	memset(c, 0, sizeof(c));
 
 	c->sock = sock;
-	c->e.events = EPOLLIN | EPOLLOUT;
+	c->e.events = EPOLLIN | EPOLLET;
 	c->e.data.fd = sock;
 
 	return c;
