@@ -20,31 +20,50 @@ typedef struct _list {
 
 #define LIST_ADD(list, entry)										\
 	do {												\
-		r_list *tmplist = list;									\
-		while (tmplist) {									\
-			if (tmplist->data) {								\
-				if (tmplist->next) {							\
-					tmplist = tmplist->next;					\
+		r_list *e = list;									\
+		while (e) {										\
+			if (e->data) {									\
+				if (e->next) {								\
+					e = e->next;							\
 				} else {								\
-					tmplist->next = (r_list*)malloc(sizeof(r_list));		\
-					tmplist->next->data = entry;					\
+					e->next = (r_list*)malloc(sizeof(r_list));			\
+					e->next->data = entry;						\
+					e->next->prev = e;						\
 					break;								\
 				}									\
 			} else {									\
-				tmplist->data = entry;							\
+				e->data = entry;							\
 				break;									\
 			}										\
 		}											\
 	} while (0)
 
+#define LIST_FIND(entry, list, data)									\
+	do {												\
+		r_list *e = list;									\
+		while (e) {										\
+			if (*(uint32_t*)e->data == data) {						\
+				break;									\
+			} else {									\
+				if (e->next) {								\
+					e = e->next;							\
+				} else {								\
+					e = NULL;							\
+					break;								\
+				}									\
+			}										\
+		}											\
+		entry = e->data;										\
+	} while (0)
+
 #define LIST_DUMP(list)											\
 	do {												\
-		r_list *tmplist = list;									\
-		while (tmplist) {									\
-			if (tmplist->data) {								\
-				printf("list data %d\n", *(int*)tmplist->data);				\
+		r_list *e = list;									\
+		while (e) {										\
+			if (e->data) {									\
+				printf("list data %d\n", *(int*)e->data);				\
 			}										\
-			tmplist = tmplist->next;							\
+			e = e->next;									\
 		}											\
 	} while (0)
 
