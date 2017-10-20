@@ -270,6 +270,8 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 	len = add_mqtt_header(res, MQTT_SUBACK, qos, r_size);
 
 	write(sock, res, len);
+
+	free(res);
 }
 
 void
