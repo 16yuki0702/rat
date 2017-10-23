@@ -66,11 +66,11 @@ _conf_handler_uint16(uint16_t *conf, const char *param)
 	*conf = ret;
 }
 
-static rat_conf *
+static void
 _read_config(char *path)
 {
 	FILE *f;
-	char *str, *token, *cptr;
+	char *token, *cptr;
 	char buf[1024];
 
 	conf = (rat_conf *)malloc(sizeof(rat_conf));

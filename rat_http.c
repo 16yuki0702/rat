@@ -21,7 +21,6 @@ static void
 _dump_http_entry(http_entry e)
 {
 	int i;
-	char *start = e.p;
 
 	for (i = 0; i < e.len; i++) {
 		printf("%c", e.p[i]);
@@ -45,7 +44,7 @@ char *
 http_request_parse(char *request)
 {
 	int eof = 0, section = 0, len = 0, k_len = 0, v_len = 0;
-	char *start, *end, *k_start, *v_start;
+	char *start, *end, *k_start = NULL, *v_start = NULL;
 
 	rat_request = (http_request*)malloc(sizeof(http_request));
 	memset(rat_request, 0, sizeof(http_request));

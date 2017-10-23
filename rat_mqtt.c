@@ -26,7 +26,7 @@ typedef enum {
 } CMP_RES;
 
 typedef struct {
-	int8_t *d;
+	uint8_t *d;
 	int len;
 } buf;
 
@@ -147,7 +147,7 @@ _read_socket(int sock)
 
 	if ((n = read(sock, tmp, BUF_SIZE)) > 0) {
 		r->len += n;
-		r->d = (int8_t*)realloc(r->d, r->len);
+		r->d = (uint8_t*)realloc(r->d, r->len);
 		memcpy(&r->d[r->len - n], tmp, n);
 	} else if (n == -1) {
 		LOG_ERROR(("failed read socket."));
@@ -175,7 +175,7 @@ _send_connack(uint32_t sock, r_mqtt_packet *p)
 	rp[3] = CONNACK_ALLOW;
 
 	write(sock, rp, 4);
-	(void*)p;
+	//(void*)p;
 }
 
 static uint16_t
@@ -241,7 +241,7 @@ static void
 handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 {
 	uint8_t qs[512];
-	uint8_t n, *res;
+	uint8_t n = 0, *res;
 	uint32_t t_len, m_len, r_size, pos, len;
 	uint8_t qos = 1;
 	uint16_t m;

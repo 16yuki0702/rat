@@ -17,7 +17,7 @@
 
 extern int start_server_http(rat_conf *conf);
 extern int start_server_mqtt(rat_conf *conf);
-extern int initialize_server(rat_conf *conf);
+extern void initialize_server(rat_conf *conf);
 
 typedef struct {
 	rat_conf *conf;

@@ -163,7 +163,8 @@ _server_loop(rat_connection *conn)
 	e = _create_event(conn->s_sock);
 
 	char read_buffer[1024];
-	int i, nfds, c_len;
+	int i, nfds;
+	socklen_t c_len;
 
 	while (1) {
 		if ((nfds = epoll_wait(e->efd, e->e_ret, NEVENTS, -1)) <= 0) {
@@ -262,7 +263,7 @@ _server_loop_mqtt(r_listener *l)
 	return 0;
 }
 
-int
+void
 initialize_server(rat_conf *conf)
 { 
 	r_server = (rat_server*)malloc(sizeof(rat_server));

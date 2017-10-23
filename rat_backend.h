@@ -47,6 +47,6 @@ topic_entry ts[3] = {
 		printf("sock : %d\n", t.sock);					\
 	} while (0)
 
-extern store_data(char *topic);
+extern int store_data(char *topic);
 
 #endif

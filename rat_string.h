@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdint.h>
 
 typedef struct {
 	char *data;
@@ -12,7 +13,7 @@ typedef struct {
 } rat_str;
 
 typedef struct {
-	char *d;
+	uint8_t *d;
 	size_t l;
 } r_str;
 

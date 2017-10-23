@@ -1,5 +1,7 @@
 CC		= gcc
-CLFAGS		= -Wall -O4 -lhiredis -L/usr/local/lib -I/usr/local/include/hiredis
+CFLAGS		= -Wall -O4
+LDFLAGS		+= -lhiredis -L/usr/local/lib
+INCLUDE		+= -I/usr/local/include/hiredis
 PROG		= rat
 SOURCES		= rat_log.c rat_string.c rat_http.c rat_mqtt.c rat_backend.c rat_server.c rat_config.c rat.c
 OBJS		= $(SOURCES:.c=.o)
@@ -9,10 +11,10 @@ OBJS		= $(SOURCES:.c=.o)
 all: $(SOURECES) $(PROG)
 
 $(PROG): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $^ $(LDFLAGS)
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< $(LDFLAGS)
 
 clean:
 	rm -rf *.o rat
