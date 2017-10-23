@@ -12,14 +12,8 @@ typedef struct _topic_entry {
 	uint8_t qos;
 	uint32_t sock;
 } topic_entry;
-/*
-topic_entry ts[3] = {
-	{1, 1, 7},
-	{2, 0, 8},
-	{3, 1, 9}
-};
-*/
-#define SCAN_SUBSCRIPTION(value, t)							\
+
+#define SCAN_SUBSCRIPTION(value, t)						\
 	do {									\
 		sprintf(value, "%d,%d", t->qos, t->sock);			\
 	} while (0)
@@ -35,8 +29,8 @@ topic_entry ts[3] = {
 #define PARSE_TOPIC(t, value)							\
 	do {									\
 		char *s = ",";							\
-		t.qos = atoi(strtok(value, s));				\
-		t.sock = atoi(strtok(NULL, s));				\
+		t.qos = atoi(strtok(value, s));					\
+		t.sock = atoi(strtok(NULL, s));					\
 	} while (0)
 
 #define DUMP_TOPIC(t)								\
@@ -52,5 +46,6 @@ typedef struct {
 } subscription;
 
 extern int store_data(subscription *sub);
+extern int publish_data(r_str *topic, uint8_t *data, uint32_t len);
 
 #endif

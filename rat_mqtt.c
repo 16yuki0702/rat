@@ -274,6 +274,35 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 	free(res);
 }
 
+static void
+handle_publish(uint32_t sock, r_mqtt_packet *p)
+{
+	uint8_t *res;
+	uint16_t t_len, m_len;
+	uint32_t data_len, len;
+
+	data_len = (2 + p->topic.l + ((p->qos >= 1) ? 2 : 0) + p->payload.l);
+
+	res = (uint8_t*)malloc(sizeof(uint8_t) * data_len);
+
+	t_len = htons(p->topic.l);
+	memcpy(res, &t_len, 2);
+	memcpy(res + 2, p->topic.d, p->topic.l);
+	if (p->qos >= 1) {
+		m_len = htons(p->message_id);
+		memcpy(res + 2 + p->topic.l, &m_len, 2);
+		memcpy(res + 2 + p->topic.l + 2, p->payload.d, p->payload.l);
+	} else {
+		memcpy(res + 2 + p->topic.l, p->payload.d, p->payload.l);
+	}
+
+	len = add_mqtt_header(res, MQTT_PUBLISH, p->qos, data_len);
+
+	publish_data(&p->topic, res, len);
+
+	free(res);
+}
+
 void
 parse_mqtt(r_connection *c)
 {
@@ -330,11 +359,16 @@ parse_mqtt(r_connection *c)
 			handle_subscribe(sock, p);
 			break;
 		case MQTT_PUBLISH:
-			ph = scan_data(&p->topic, ph);
-			p->message_id = get_uint16(ph);
-			ph += 2;
+			p->topic.l = ph[0] << 8 | ph[1];
+			p->topic.d = &ph[2];
+			ph += 2 + p->topic.l;
+			if (p->qos >= 1) {
+				p->message_id = get_uint16(ph);
+				ph += 2;
+			}
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
+			handle_publish(sock, p);
 			break;
 		case MQTT_DISCONNECT:
 			close(sock);

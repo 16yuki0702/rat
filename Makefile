@@ -11,10 +11,10 @@ OBJS		= $(SOURCES:.c=.o)
 all: $(SOURECES) $(PROG)
 
 $(PROG): $(OBJS)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 .c.o:
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< $(LDFLAGS)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $<
 
 clean:
 	rm -rf *.o rat
