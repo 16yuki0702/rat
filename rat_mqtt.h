@@ -43,13 +43,13 @@
 extern void parse_mqtt(r_connection *c);
 
 typedef enum {
-	CONNECTING
-} r_mqtt_state;
-
-typedef struct {
-	int sock;
-	r_mqtt_state state;
-} r_mqtt_conn;
+	CONNACK_ALLOW,
+	CONNACK_DENY_PROTOCOL,
+	CONNACK_DENY_ID,
+	CONNACK_DENY_SERVER_ERROR,
+	CONNACK_DENY_AUTH_FAILURE,
+	CONNACK_DENY_NOT_PERMITTED
+} MQTT_CONNACK_RC;
 
 typedef struct {
 	uint8_t cmd:4;

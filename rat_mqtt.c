@@ -1,30 +1,5 @@
 #include "rat_mqtt.h"
 
-char test1[] = "foo";
-char test2[] = "foo/bar";
-char test3[] = "foo/bar/baz";
-
-typedef struct _map_entry {
-	struct _map_entry *root;
-	struct _map_entry *left;
-	struct _map_entry *right;
-	char *data;
-} map_entry;
-
-typedef struct {
-	map_entry **roots;
-	int count;
-} mapper;
-
-mapper map;
-
-typedef enum {
-	SAME = 0,
-	NOT_SAME,
-	LEFT,
-	RIGHT
-} CMP_RES;
-
 typedef struct {
 	uint8_t *d;
 	int len;
@@ -35,104 +10,6 @@ free_buf(buf *b)
 {
 	free(b->d);
 	free(b);
-}
-
-CMP_RES
-_strcmpn(char *s1, char *s2, int len)
-{
-	int i;
-	for (i = 0; i < len; i++) {
-		if (!s1[i] && !s2[i]) {
-			return SAME;
-		} else if (!s1[i] && s2[i]) {
-			return RIGHT;
-		} else if (s1[i] && !s2[i]) {
-			return LEFT;
-		} else if (s1[i] != s2[i]) {
-			return NOT_SAME;
-		}
-	}
-
-	return SAME;
-}
-
-void
-_parse_topic(char *data, char *t)
-{
-	char *start;
-	int c = 0;
-	CMP_RES r;
-
-	while (t[c]) {
-		start = t;
-		if (t[c] == '/') {
-			r = _strcmpn(data, t, strlen(t));
-		}
-		c++;
-	}
-}
-
-void
-_realloc_map(int resize)
-{
-	map.roots = (map_entry**)realloc(map.roots, sizeof(map_entry*) * resize);
-	if (map.roots == NULL) {
-		LOG_FATAL(("exhausted memory."));
-	}
-}
-
-void
-__free_map(map_entry *e)
-{
-	if (e->left) {
-		__free_map(e->left);
-	}
-	if (e->right) {
-		__free_map(e->right);
-	}
-	free(e->data);
-	free(e);
-}
-
-void
-_free_map(int size)
-{
-	int i;
-	for (i = 0; i < size; i++) {
-		map_entry *e;
-		e = map.roots[i];
-		__free_map(e);
-	}
-	free(map.roots);
-}
-
-void
-_test_driver()
-{
-	_realloc_map(1);
-
-	map_entry *e = map.roots[0];
-
-	_realloc_map(1);
-	_parse_topic(e->data, test1);
-	_realloc_map(2);
-	_parse_topic(e->data, test2);
-	_realloc_map(3);
-	_parse_topic(e->data, test3);
-}
-
-void
-_dec2bin(int dec)
-{
-	int bin = 0, base = 1;
-
-	while (dec > 0) {
-		bin += (dec % 2) * base;
-		dec /= 2;
-		base *= 10;
-	}
-
-	printf("%d\n", bin);
 }
 
 buf *
@@ -155,15 +32,6 @@ _read_socket(int sock)
 
 	return r;
 }
-
-typedef enum {
-	CONNACK_ALLOW,
-	CONNACK_DENY_PROTOCOL,
-	CONNACK_DENY_ID,
-	CONNACK_DENY_SERVER_ERROR,
-	CONNACK_DENY_AUTH_FAILURE,
-	CONNACK_DENY_NOT_PERMITTED
-} MQTT_CONNACK_RC;
 
 void
 _send_connack(uint32_t sock, r_mqtt_packet *p)
@@ -195,7 +63,7 @@ init_mqtt_packet()
 }
 
 static uint8_t *
-scan_data(r_str *p, uint8_t *c)
+scan_data16(r_str *p, uint8_t *c)
 {
 	p->l = get_uint16(c);
 	p->d = c + 2;
@@ -333,21 +201,21 @@ parse_mqtt(r_connection *c)
 
 	switch (p->cmd) {
 		case MQTT_CONNECT:
-			ph = scan_data(&p->protocol_name, ph);
+			ph = scan_data16(&p->protocol_name, ph);
 			p->protocol_version = *ph++;
 			p->connect_flags = *ph++;
 			p->keepalive_timer = get_uint16(ph);
 			ph += 2;
-			ph = scan_data(&p->client_id, ph);
+			ph = scan_data16(&p->client_id, ph);
 			if (p->connect_flags & MQTT_IS_WILL) {
-				ph = scan_data(&p->will_topic, ph);
-				ph = scan_data(&p->will_message, ph);
+				ph = scan_data16(&p->will_topic, ph);
+				ph = scan_data16(&p->will_message, ph);
 			}
 			if (p->connect_flags & MQTT_IS_USERNAME) {
-				ph = scan_data(&p->username, ph);
+				ph = scan_data16(&p->username, ph);
 			}
 			if (p->connect_flags & MQTT_IS_PASSWORD) {
-				ph = scan_data(&p->password, ph);
+				ph = scan_data16(&p->password, ph);
 			}
 			_send_connack(sock, p);
 			break;
