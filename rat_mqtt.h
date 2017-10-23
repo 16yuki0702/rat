@@ -12,6 +12,7 @@
 #include "rat_log.h"
 #include "rat_string.h"
 #include "rat_server.h"
+#include "rat_backend.h"
 
 #define MQTT_CONNECT		0x01
 #define MQTT_CONNACK		0x02

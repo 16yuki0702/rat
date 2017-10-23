@@ -1,14 +1,14 @@
 #include "rat_backend.h"
 
-int32_t
-store_data(char *topic)
+int
+store_data(subscription *sub)
 {
 	redisContext *conn = NULL;
 	redisReply *resp = NULL;
 	topic_entry t;
 	uint32_t i;
 	char value[9];
-	uint8_t key[] = "/test/";
+	uint8_t *key;
 
 	conn = redisConnect("127.0.0.1", 6379);
 	if ((conn != NULL) && conn->err) {
@@ -19,17 +19,20 @@ store_data(char *topic)
 		exit(-1);
 	}
 
-	for (i = 0; i < 3; i++) {
-		SCAN_TOPIC(value, ts[i]);
-		resp = (redisReply*)redisCommand(conn, "sadd %s %s", key, value);
-		if (resp == NULL) {
-			redisFree(conn);
-			exit(-1);
-		} else if (resp->type == REDIS_REPLY_ERROR) {
-			redisFree(conn);
-			freeReplyObject(resp);
-			exit(-1);
-		}
+	key = (uint8_t*)malloc(sizeof(uint8_t) * sub->topic.l);
+	strncpy((char*)key, (char*)sub->topic.d, sub->topic.l);
+	SCAN_SUBSCRIPTION(value, sub);
+
+	resp = (redisReply*)redisCommand(conn, "sadd %s %s", key, value);
+	if (resp == NULL) {
+		redisFree(conn);
+		free(key);
+		exit(-1);
+	} else if (resp->type == REDIS_REPLY_ERROR) {
+		freeReplyObject(resp);
+		redisFree(conn);
+		free(key);
+		exit(-1);
 	}
 
 	resp = redisCommand(conn, "smembers %s", key);
@@ -39,8 +42,6 @@ store_data(char *topic)
 		printf("Unexpected type: %d\n", resp->type);
 	} else {
 		for (i = 0; i < resp->elements; i++) {
-			//printf("Result: %s\n", resp->element[i]->str);
-			//PRINT_TOPIC(resp->element[i]->str);
 			PARSE_TOPIC(t, resp->element[i]->str);
 			DUMP_TOPIC(t);
 		}
@@ -48,5 +49,6 @@ store_data(char *topic)
 
 	freeReplyObject(resp);
 	redisFree(conn);
+	free(key);
 	return 0;
 }

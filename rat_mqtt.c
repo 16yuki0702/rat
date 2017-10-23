@@ -242,22 +242,22 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 {
 	uint8_t qs[512];
 	uint8_t n = 0, *res;
-	uint32_t t_len, m_len, r_size, pos, len;
+	uint32_t m_len, r_size, pos, len;
 	uint8_t qos = 1;
 	uint16_t m;
+	subscription sub;
 
-	// TODO store the topic data relating each conneciton to.
-/*
-	p->topic.l = p->payload.d[0] << 8 | p->payload.d[1];
-	p->topic.d = p->payload.d + 2;
-	p->qos = p->payload.d[2 + p->topic.l];
-*/
 	pos = 0;
+	sub.sock = sock;
 
 	while (p->payload.l > pos) {
-		t_len = p->payload.d[pos] << 8 | p->payload.d[pos + 1];
-		pos += 2 + t_len;
-		qs[n++] = p->payload.d[pos++];
+		sub.topic.l = p->payload.d[pos] << 8 | p->payload.d[pos + 1];
+		sub.topic.d = &p->payload.d[pos + 2];
+		pos += 2 + sub.topic.l;
+		qs[n++] = p->payload.d[pos];
+		sub.qos = p->payload.d[pos];
+		pos += 1;
+		store_data(&sub);
 	}
 
 	m_len = sizeof(p->message_id);
