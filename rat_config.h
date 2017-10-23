@@ -15,6 +15,8 @@ typedef struct {
 	uint16_t backlog;
 	int socket_reuse;
 	int log_level;
+	rat_str *redis_server;
+	int redis_port;
 } rat_conf;
 
 typedef struct {

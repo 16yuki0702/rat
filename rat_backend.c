@@ -1,14 +1,14 @@
 #include "rat_backend.h"
 
 int
-store_data(subscription *sub)
+store_data(subscription *sub, rat_conf *conf)
 {
 	redisContext *conn = NULL;
 	redisReply *resp = NULL;
 	char value[9];
 	uint8_t *key;
 
-	conn = redisConnect("127.0.0.1", 6379);
+	conn = redisConnect(conf->redis_server->data, conf->redis_port);
 	if ((conn != NULL) && conn->err) {
 		printf("error : %s\n", conn->errstr);
 		redisFree(conn);
@@ -37,11 +37,12 @@ store_data(subscription *sub)
 	freeReplyObject(resp);
 	redisFree(conn);
 	free(key);
+
 	return 0;
 }
 
 int
-publish_data(r_str *topic, uint8_t *data, uint32_t len)
+publish_data(r_str *topic, uint8_t *data, uint32_t len, rat_conf *conf)
 {
 	redisContext *conn = NULL;
 	redisReply *resp = NULL;
@@ -49,7 +50,7 @@ publish_data(r_str *topic, uint8_t *data, uint32_t len)
 	uint8_t i;
 	topic_entry t;
 
-	conn = redisConnect("127.0.0.1", 6379);
+	conn = redisConnect(conf->redis_server->data, conf->redis_port);
 	if ((conn != NULL) && conn->err) {
 		printf("error : %s\n", conn->errstr);
 		redisFree(conn);
@@ -77,5 +78,6 @@ publish_data(r_str *topic, uint8_t *data, uint32_t len)
 	freeReplyObject(resp);
 	redisFree(conn);
 	free(key);
+
 	return 0;
 }

@@ -12,6 +12,8 @@ _dump_config(void)
 	LOG_DEBUG(("backlog : %d",	conf->backlog));
 	LOG_DEBUG(("socket_reuse : %d",	conf->socket_reuse));
 	LOG_DEBUG(("log_level : %d",	conf->log_level));
+	LOG_DEBUG(("redis_server : %d",	conf->redis_server->data));
+	LOG_DEBUG(("redis_port : %d",	conf->redis_port));
 }
 
 static void
@@ -93,6 +95,10 @@ _read_config(char *path)
 			_conf_handler_int(&conf->socket_reuse, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "log_level")) {
 			_conf_handler_int(&conf->log_level, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "redis_server")) {
+			_conf_handler_string(&conf->redis_server, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "redis_port")) {
+			_conf_handler_int(&conf->redis_port, strtok_r(NULL, "", &cptr));
 		}
 	}
 }

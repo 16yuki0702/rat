@@ -44,6 +44,7 @@ typedef struct {
 	int sock;
 	struct sockaddr_in addr;
 	struct epoll_event e;
+	rat_conf *conf;
 } r_connection;
 
 typedef struct {

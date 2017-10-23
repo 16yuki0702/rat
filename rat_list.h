@@ -38,11 +38,11 @@ typedef struct _list {
 		}											\
 	} while (0)
 
-#define LIST_FIND(entry, list, data)									\
+#define LIST_FIND(entry, list, data, type)								\
 	do {												\
 		r_list *e = list;									\
 		while (e) {										\
-			if (*(uint32_t*)e->data == data) {						\
+			if (*(type*)e->data == data) {							\
 				break;									\
 			} else {									\
 				if (e->next) {								\
@@ -53,15 +53,15 @@ typedef struct _list {
 				}									\
 			}										\
 		}											\
-		entry = e->data;										\
+		entry = e->data;									\
 	} while (0)
 
-#define LIST_DUMP(list)											\
+#define LIST_DUMP(list, type)										\
 	do {												\
 		r_list *e = list;									\
 		while (e) {										\
 			if (e->data) {									\
-				printf("list data %d\n", *(int*)e->data);				\
+				printf("list data %d\n", *(type*)e->data);				\
 			}										\
 			e = e->next;									\
 		}											\

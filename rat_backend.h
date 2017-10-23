@@ -45,7 +45,7 @@ typedef struct {
 	uint8_t qos;
 } subscription;
 
-extern int store_data(subscription *sub);
-extern int publish_data(r_str *topic, uint8_t *data, uint32_t len);
+extern int store_data(subscription *sub, rat_conf *conf);
+extern int publish_data(r_str *topic, uint8_t *data, uint32_t len, rat_conf *conf);
 
 #endif

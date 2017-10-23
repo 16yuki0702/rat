@@ -34,7 +34,7 @@ _read_socket(int sock)
 }
 
 void
-_send_connack(uint32_t sock, r_mqtt_packet *p)
+send_connack(uint32_t sock, r_mqtt_packet *p)
 {
 	char rp[4] = {0};
 	rp[0] = MQTT_CONNACK << 4;
@@ -106,7 +106,7 @@ add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t qos, uint32_t len)
 }
 
 static void
-handle_subscribe(uint32_t sock, r_mqtt_packet *p)
+handle_subscribe(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
 {
 	uint8_t qs[512];
 	uint8_t n = 0, *res;
@@ -125,7 +125,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 		qs[n++] = p->payload.d[pos];
 		sub.qos = p->payload.d[pos];
 		pos += 1;
-		store_data(&sub);
+		store_data(&sub, conf);
 	}
 
 	m_len = sizeof(p->message_id);
@@ -143,7 +143,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p)
 }
 
 static void
-handle_publish(uint32_t sock, r_mqtt_packet *p)
+handle_publish(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
 {
 	uint8_t *res;
 	uint16_t t_len, m_len;
@@ -156,6 +156,7 @@ handle_publish(uint32_t sock, r_mqtt_packet *p)
 	t_len = htons(p->topic.l);
 	memcpy(res, &t_len, 2);
 	memcpy(res + 2, p->topic.d, p->topic.l);
+
 	if (p->qos >= 1) {
 		m_len = htons(p->message_id);
 		memcpy(res + 2 + p->topic.l, &m_len, 2);
@@ -166,7 +167,7 @@ handle_publish(uint32_t sock, r_mqtt_packet *p)
 
 	len = add_mqtt_header(res, MQTT_PUBLISH, p->qos, data_len);
 
-	publish_data(&p->topic, res, len);
+	publish_data(&p->topic, res, len, conf);
 
 	free(res);
 }
@@ -217,14 +218,14 @@ parse_mqtt(r_connection *c)
 			if (p->connect_flags & MQTT_IS_PASSWORD) {
 				ph = scan_data16(&p->password, ph);
 			}
-			_send_connack(sock, p);
+			send_connack(sock, p);
 			break;
 		case MQTT_SUBSCRIBE:
 			p->message_id = get_uint16(ph);
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_subscribe(sock, p);
+			handle_subscribe(sock, p, c->conf);
 			break;
 		case MQTT_PUBLISH:
 			p->topic.l = ph[0] << 8 | ph[1];
@@ -236,7 +237,7 @@ parse_mqtt(r_connection *c)
 			}
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_publish(sock, p);
+			handle_publish(sock, p, c->conf);
 			break;
 		case MQTT_DISCONNECT:
 			close(sock);

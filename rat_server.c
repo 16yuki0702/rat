@@ -250,7 +250,8 @@ _server_loop_mqtt(r_listener *l)
 			} else {
 
 				data = l->e_ret[i].data.fd;
-				LIST_FIND(entry, mng->list, data);
+				LIST_FIND(entry, mng->list, data, uint32_t);
+				entry->conf = l->conf;
 				parse_mqtt(entry);
 			}
 		}
