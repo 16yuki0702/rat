@@ -272,6 +272,8 @@ _server_loop_mqtt(r_listener *l)
 				LIST_FIND(entry, mng->list, data, uint32_t);
 				entry->conf = l->conf;
 				entry->b = read_socket(data);
+				//printf("from cluster : %s\n", entry->b->d);
+				//printf("myport : %d\n", conf->port);
 				parse_mqtt(entry);
 
 				free(entry->b);

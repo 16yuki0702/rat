@@ -6,6 +6,13 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/epoll.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "rat_config.h"
 #include "rat_net.h"
 #include "rat_backend.h"

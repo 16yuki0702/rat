@@ -1,5 +1,7 @@
 #include "rat_mqtt.h"
 
+r_list *c_list = NULL;
+
 void
 free_buf(buf *b)
 {
@@ -80,7 +82,51 @@ add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t qos, uint32_t len)
 }
 
 static void
-handle_subscribe(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
+handle_clusters(r_connection *r)
+{
+	// if DUP bit is set. it indicate this packet send from clusters.
+	// (in fact PUBLISH is not set this flag to 1.
+	if (r->b->d[0] & 0x08) {
+		printf("from clusters!!\n");
+		return;
+	}
+
+	if (c_list == NULL) {
+		LIST_INIT(c_list);
+
+		uint32_t sock;
+		struct sockaddr_in addr;
+		r_connection *c;
+
+		c = (r_connection*)malloc(sizeof(r_connection));
+
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		memset(&addr, 0, sizeof(struct sockaddr_in));
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(r->conf->cluster_port);
+		addr.sin_addr.s_addr = inet_addr(r->conf->cluster->data);
+
+		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+			// do nothing.
+			return;
+		}
+
+		c->sock = sock;
+
+		LIST_ADD(c_list, c);
+	}
+
+	// to indicate this packet from clusters.
+	r->b->d[0] |= 0x08;
+
+	write(((r_connection*)c_list->data)->sock, r->b->d, r->b->len);
+
+	//close(sock);
+}
+
+static void
+handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 {
 	uint8_t qs[512];
 	uint8_t n = 0, *res;
@@ -99,7 +145,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
 		qs[n++] = p->payload.d[pos];
 		sub.qos = p->payload.d[pos];
 		pos += 1;
-		store_data(&sub, conf);
+		store_data(&sub, r->conf);
 	}
 
 	m_len = sizeof(p->message_id);
@@ -117,7 +163,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
 }
 
 static void
-handle_publish(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
+handle_publish(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 {
 	uint8_t *res;
 	uint16_t t_len, m_len;
@@ -141,7 +187,11 @@ handle_publish(uint32_t sock, r_mqtt_packet *p, rat_conf *conf)
 
 	len = add_mqtt_header(res, MQTT_PUBLISH, p->qos, data_len);
 
-	publish_data(&p->topic, res, len, conf);
+	publish_data(&p->topic, res, len, r->conf);
+
+	if (r->conf->cluster_enable) {
+		handle_clusters(r);
+	}
 
 	free(res);
 }
@@ -199,7 +249,7 @@ parse_mqtt(r_connection *c)
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_subscribe(sock, p, c->conf);
+			handle_subscribe(sock, p, c);
 			break;
 		case MQTT_PUBLISH:
 			p->topic.l = ph[0] << 8 | ph[1];
@@ -211,7 +261,7 @@ parse_mqtt(r_connection *c)
 			}
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_publish(sock, p, c->conf);
+			handle_publish(sock, p, c);
 			break;
 		case MQTT_DISCONNECT:
 			close(sock);
