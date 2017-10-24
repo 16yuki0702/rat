@@ -1,18 +1,15 @@
 #ifndef RAT_MQTT_H
 #define RAT_MQTT_H
 
-#define BUF_SIZE			1024
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "rat.h"
-#include "rat_log.h"
-#include "rat_string.h"
-#include "rat_server.h"
+#include "rat_config.h"
+#include "rat_net.h"
 #include "rat_backend.h"
+#include "rat.h"
 
 #define MQTT_CONNECT		0x01
 #define MQTT_CONNACK		0x02

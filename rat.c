@@ -5,9 +5,8 @@
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
+#include "rat.h"
 #include "rat_server.h"
-#include "rat_config.h"
-#include "rat_log.h"
 
 char version[] = "0.0.1";
 rat_conf *conf;

@@ -1,36 +1,10 @@
 #include "rat_mqtt.h"
 
-typedef struct {
-	uint8_t *d;
-	int len;
-} buf;
-
 void
 free_buf(buf *b)
 {
 	free(b->d);
 	free(b);
-}
-
-buf *
-_read_socket(int sock)
-{
-	int8_t tmp[BUF_SIZE];
-	int n;
-	buf *r;
-
-	r = (buf*)malloc(sizeof(buf));
-	memset(r, 0, sizeof(buf));
-
-	if ((n = read(sock, tmp, BUF_SIZE)) > 0) {
-		r->len += n;
-		r->d = (uint8_t*)realloc(r->d, r->len);
-		memcpy(&r->d[r->len - n], tmp, n);
-	} else if (n == -1) {
-		LOG_ERROR(("failed read socket."));
-	}
-
-	return r;
 }
 
 void
@@ -181,8 +155,8 @@ parse_mqtt(r_connection *c)
 	buf *b;
 
 	sock = c->sock;
+	b = c->b;
 
-	b = _read_socket(sock);
 	h1 = b->d[0];
 	ph = &b->d[1];
 
@@ -246,6 +220,4 @@ parse_mqtt(r_connection *c)
 			send(sock, "test", 4, 0);
 			break;
 	}
-
-	free_buf(b);
 }

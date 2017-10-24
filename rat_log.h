@@ -7,6 +7,7 @@
 #include <stdarg.h>
 #include <time.h>
 #include <sys/stat.h>
+#include "rat.h"
 
 #define LOG_DIR "log"
 #define LOG_FILE "log/rat.log"

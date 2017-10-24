@@ -9,15 +9,13 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "rat_http.h"
 #include "rat_config.h"
-#include "rat_list.h"
+#include "rat_string.h"
+#include "rat_net.h"
+#include "rat_mqtt.h"
 
 #define NEVENTS 16
-
-extern int start_server_http(rat_conf *conf);
-extern int start_server_mqtt(rat_conf *conf);
-extern void initialize_server(rat_conf *conf);
+#define BUF_SIZE			1024
 
 typedef struct {
 	rat_conf *conf;
@@ -41,13 +39,6 @@ typedef struct {
 } rat_event;
 
 typedef struct {
-	int sock;
-	struct sockaddr_in addr;
-	struct epoll_event e;
-	rat_conf *conf;
-} r_connection;
-
-typedef struct {
 	int efd;
 	struct epoll_event e;
 	struct epoll_event e_ret[NEVENTS];
@@ -61,5 +52,10 @@ typedef struct {
 	uint32_t c_count;
 	r_listener listener;
 } r_mqtt_manager;
+
+extern int start_server_http(rat_conf *conf);
+extern int start_server_mqtt(rat_conf *conf);
+extern void initialize_server(rat_conf *conf);
+extern buf* read_socket(int sock);
 
 #endif

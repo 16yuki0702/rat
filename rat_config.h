@@ -17,6 +17,9 @@ typedef struct {
 	int log_level;
 	rat_str *redis_server;
 	int redis_port;
+	uint16_t cluster_enable;
+	rat_str *cluster;
+	int cluster_port;
 } rat_conf;
 
 typedef struct {

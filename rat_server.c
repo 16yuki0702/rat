@@ -1,9 +1,28 @@
 #include "rat_server.h"
-#include "rat_http.h"
-#include "rat_mqtt.h"
 
 http_request *rat_request;
 rat_server *r_server;
+
+buf *
+read_socket(int sock)
+{
+	int8_t tmp[BUF_SIZE];
+	int n;
+	buf *r;
+
+	r = (buf*)malloc(sizeof(buf));
+	memset(r, 0, sizeof(buf));
+
+	if ((n = read(sock, tmp, BUF_SIZE)) > 0) {
+		r->len += n;
+		r->d = (uint8_t*)realloc(r->d, r->len);
+		memcpy(&r->d[r->len - n], tmp, n);
+	} else if (n == -1) {
+		LOG_ERROR(("failed read socket."));
+	}
+
+	return r;
+}
 
 static void
 _send_response(int c_socket)
@@ -252,7 +271,10 @@ _server_loop_mqtt(r_listener *l)
 				data = l->e_ret[i].data.fd;
 				LIST_FIND(entry, mng->list, data, uint32_t);
 				entry->conf = l->conf;
+				entry->b = read_socket(data);
 				parse_mqtt(entry);
+
+				free(entry->b);
 			}
 		}
 	}

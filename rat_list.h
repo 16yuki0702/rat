@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "rat.h"
 
 typedef struct _list {
 	void *data;

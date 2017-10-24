@@ -5,8 +5,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 #include <hiredis.h>
-#include "rat_mqtt.h"
+#include "rat_string.h"
+#include "rat_config.h"
 
 typedef struct _topic_entry {
 	uint8_t qos;
