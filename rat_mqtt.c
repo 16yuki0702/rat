@@ -1,7 +1,7 @@
 #include "rat_mqtt.h"
 
 void
-send_connack(uint32_t sock, r_mqtt_packet *p)
+handle_connack(r_connection *c)
 {
 	char rp[4] = {0};
 	rp[0] = MQTT_CONNACK << 4;
@@ -9,7 +9,7 @@ send_connack(uint32_t sock, r_mqtt_packet *p)
 	rp[2] = 0;
 	rp[3] = CONNACK_ALLOW;
 
-	write(sock, rp, 4);
+	write(c->sock, rp, 4);
 	//(void*)p;
 }
 
@@ -72,8 +72,8 @@ add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t dup, uint8_t qos, uint32_t le
 	return resize;
 }
 
-static void
-handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
+void
+handle_subscribe(r_connection *c)
 {
 	uint8_t qs[512];
 	uint8_t n = 0, *res;
@@ -81,9 +81,11 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 	uint8_t dup = 0, qos = 1;
 	uint16_t m;
 	subscription sub;
+	r_mqtt_packet *p;
 
 	pos = 0;
-	sub.sock = sock;
+	sub.sock = c->sock;
+	p = c->p;
 
 	while (p->payload.l > pos) {
 		sub.topic.l = p->payload.d[pos] << 8 | p->payload.d[pos + 1];
@@ -92,7 +94,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 		qs[n++] = p->payload.d[pos];
 		sub.qos = p->payload.d[pos];
 		pos += 1;
-		store_data(&sub, r->conf);
+		store_data(&sub, c->conf);
 	}
 
 	m_len = sizeof(p->message_id);
@@ -104,17 +106,20 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 	memcpy(res + m_len, qs, n);
 	len = add_mqtt_header(res, MQTT_SUBACK, dup, qos, r_size);
 
-	write(sock, res, len);
+	write(c->sock, res, len);
 
 	free(res);
 }
 
-static void
-handle_publish(uint32_t sock, r_mqtt_packet *p, r_connection *r)
+void
+handle_publish(r_connection *c)
 {
 	uint8_t *res;
 	uint16_t t_len, m_len;
 	uint32_t data_len, len;
+	r_mqtt_packet *p;
+
+	p = c->p;
 
 	data_len = (2 + p->topic.l + ((p->qos >= 1) ? 2 : 0) + p->payload.l);
 
@@ -134,7 +139,7 @@ handle_publish(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 
 	len = add_mqtt_header(res, MQTT_PUBLISH, p->dup, p->qos, data_len);
 
-	publish_data(&p->topic, res, len, r->conf);
+	publish_data(&p->topic, res, len, c->conf);
 
 	free(res);
 }
@@ -185,14 +190,16 @@ parse_mqtt(r_connection *c)
 			if (p->connect_flags & MQTT_IS_PASSWORD) {
 				ph = scan_data16(&p->password, ph);
 			}
-			send_connack(sock, p);
+			c->handle_mqtt = handle_connack;
+			//send_connack(sock, p);
 			break;
 		case MQTT_SUBSCRIBE:
 			p->message_id = get_uint16(ph);
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_subscribe(sock, p, c);
+			//handle_subscribe(sock, p, c);
+			c->handle_mqtt = handle_subscribe;
 			break;
 		case MQTT_PUBLISH:
 			p->topic.l = ph[0] << 8 | ph[1];
@@ -204,7 +211,8 @@ parse_mqtt(r_connection *c)
 			}
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			handle_publish(sock, p, c);
+			c->handle_mqtt = handle_publish;
+			//handle_publish(sock, p, c);
 			break;
 		case MQTT_DISCONNECT:
 			close(sock);
@@ -213,4 +221,6 @@ parse_mqtt(r_connection *c)
 			send(sock, "test", 4, 0);
 			break;
 	}
+
+	c->p = p;
 }

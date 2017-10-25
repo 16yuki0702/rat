@@ -326,7 +326,23 @@ _server_loop_mqtt(r_listener *l)
 				entry->conf = l->conf;
 				entry->b = read_socket(entry->sock);
 				parse_mqtt(entry);
+				entry->e.events = EPOLLOUT | EPOLLET;
+				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+					perror("epoll_ctl");
+					return -1;
+				}
+
+			} else if (l->e_ret[i].events & EPOLLOUT) {
+				
+				entry = l->e_ret[i].data.ptr;
+				entry->handle_mqtt(entry);
+				entry->e.events = EPOLLIN | EPOLLET;
+				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+					perror("epoll_ctl");
+					return -1;
+				}
 				free_buf(entry->b);
+				free(entry->p);
 			}
 		}
 	}

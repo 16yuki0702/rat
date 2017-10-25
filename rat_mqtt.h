@@ -46,6 +46,9 @@
 #define MQTT_IS_PASSWORD	0x80
 
 extern void parse_mqtt(r_connection *c);
+extern void handle_suback(r_connection *c);
+extern void handle_subscribe(r_connection *c);
+extern void handle_publish(r_connection *c);
 
 typedef enum {
 	CONNACK_ALLOW,
@@ -55,25 +58,5 @@ typedef enum {
 	CONNACK_DENY_AUTH_FAILURE,
 	CONNACK_DENY_NOT_PERMITTED
 } MQTT_CONNACK_RC;
-
-typedef struct {
-	uint8_t cmd:4;
-	uint8_t dup:1;
-	uint8_t qos:2;
-	uint8_t retain:1;
-	uint32_t remain;
-	r_str protocol_name;
-	uint8_t protocol_version;
-	uint8_t connect_flags;
-	uint16_t keepalive_timer;
-	r_str client_id;
-	r_str will_topic;
-	r_str will_message;
-	r_str username;
-	r_str password;
-	uint16_t message_id;
-	r_str payload;
-	r_str topic;
-} r_mqtt_packet;
 
 #endif
