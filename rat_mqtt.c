@@ -1,14 +1,5 @@
 #include "rat_mqtt.h"
 
-r_list *c_list = NULL;
-
-void
-free_buf(buf *b)
-{
-	free(b->d);
-	free(b);
-}
-
 void
 send_connack(uint32_t sock, r_mqtt_packet *p)
 {
@@ -47,13 +38,13 @@ scan_data16(r_str *p, uint8_t *c)
 }
 
 uint8_t
-add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t qos, uint32_t len)
+add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t dup, uint8_t qos, uint32_t len)
 {
 	uint8_t header[5];
 	uint8_t i = 1, remain, resize;
 	uint8_t *tmp;
 
-	header[0] = (cmd << 4) | (qos << 1);
+	header[0] = (cmd << 4) | (dup << 3) | (qos << 1);
 	remain = len;
 
 	do {
@@ -82,56 +73,12 @@ add_mqtt_header(uint8_t *dst, uint8_t cmd, uint8_t qos, uint32_t len)
 }
 
 static void
-handle_clusters(r_connection *r)
-{
-	// if DUP bit is set. it indicate this packet send from clusters.
-	// (in fact PUBLISH is not set this flag to 1.
-	if (r->b->d[0] & 0x08) {
-		printf("from clusters!!\n");
-		return;
-	}
-
-	if (c_list == NULL) {
-		LIST_INIT(c_list);
-
-		uint32_t sock;
-		struct sockaddr_in addr;
-		r_connection *c;
-
-		c = (r_connection*)malloc(sizeof(r_connection));
-
-		sock = socket(AF_INET, SOCK_STREAM, 0);
-		memset(&addr, 0, sizeof(struct sockaddr_in));
-
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(r->conf->cluster_port);
-		addr.sin_addr.s_addr = inet_addr(r->conf->cluster->data);
-
-		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-			// do nothing.
-			return;
-		}
-
-		c->sock = sock;
-
-		LIST_ADD(c_list, c);
-	}
-
-	// to indicate this packet from clusters.
-	r->b->d[0] |= 0x08;
-
-	write(((r_connection*)c_list->data)->sock, r->b->d, r->b->len);
-
-	//close(sock);
-}
-
-static void
 handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 {
 	uint8_t qs[512];
 	uint8_t n = 0, *res;
 	uint32_t m_len, r_size, pos, len;
-	uint8_t qos = 1;
+	uint8_t dup = 0, qos = 1;
 	uint16_t m;
 	subscription sub;
 
@@ -155,7 +102,7 @@ handle_subscribe(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 	res = (uint8_t*)malloc(sizeof(uint8_t) * (r_size));
 	memcpy(res, &m, m_len);
 	memcpy(res + m_len, qs, n);
-	len = add_mqtt_header(res, MQTT_SUBACK, qos, r_size);
+	len = add_mqtt_header(res, MQTT_SUBACK, dup, qos, r_size);
 
 	write(sock, res, len);
 
@@ -185,13 +132,9 @@ handle_publish(uint32_t sock, r_mqtt_packet *p, r_connection *r)
 		memcpy(res + 2 + p->topic.l, p->payload.d, p->payload.l);
 	}
 
-	len = add_mqtt_header(res, MQTT_PUBLISH, p->qos, data_len);
+	len = add_mqtt_header(res, MQTT_PUBLISH, p->dup, p->qos, data_len);
 
 	publish_data(&p->topic, res, len, r->conf);
-
-	if (r->conf->cluster_enable) {
-		handle_clusters(r);
-	}
 
 	free(res);
 }

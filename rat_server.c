@@ -6,17 +6,17 @@ rat_server *r_server;
 buf *
 read_socket(int sock)
 {
-	int8_t tmp[BUF_SIZE];
 	int n;
 	buf *r;
 
 	r = (buf*)malloc(sizeof(buf));
 	memset(r, 0, sizeof(buf));
 
-	if ((n = read(sock, tmp, BUF_SIZE)) > 0) {
-		r->len += n;
-		r->d = (uint8_t*)realloc(r->d, r->len);
-		memcpy(&r->d[r->len - n], tmp, n);
+	r->d = (uint8_t*)malloc(sizeof(uint8_t) * BUF_SIZE);
+	memset(r->d, 0, sizeof(uint8_t) * BUF_SIZE);
+
+	if ((n = read(sock, r->d, BUF_SIZE)) > 0) {
+		r->len = n;
 	} else if (n == -1) {
 		LOG_ERROR(("failed read socket."));
 	}
@@ -123,7 +123,7 @@ _create_listener(rat_conf *conf)
 	l->addr.sin_port = htons(conf->port);
 	l->addr.sin_addr.s_addr = INADDR_ANY;
 	ioctl(l->sock, FIONBIO, &on);
-	fcntl(l->sock, F_SETFD, FD_CLOEXEC);
+	ioctl(l->sock, FD_CLOEXEC, &on);
 
 	if (conf->socket_reuse) {
 		setsockopt(l->sock, SOL_SOCKET, SO_REUSEADDR, &conf->socket_reuse, sizeof(conf->socket_reuse));
@@ -165,8 +165,13 @@ static r_connection *
 _create_new_connection(int sock)
 {
 	r_connection *c;
+	int on = 1;
+
 	c = (r_connection*)malloc(sizeof(r_connection));
 	memset(c, 0, sizeof(c));
+
+	ioctl(sock, FIONBIO, &on);
+	ioctl(sock, FD_CLOEXEC, &on);
 
 	c->sock = sock;
 	c->e.events = EPOLLIN | EPOLLET;
@@ -229,7 +234,51 @@ _server_loop(rat_connection *conn)
 
 	return 0;
 }
+/*
+static void
+handle_clusters(r_connection *r)
+{
+	// if DUP bit is set. it indicate this packet send from clusters.
+	// (in fact PUBLISH is not set this flag to 1.
+	if ((r->b->d[0] & 0x08) >> 3) {
+		return;
+	}
 
+	if (c_list == NULL) {
+		LIST_INIT(c_list);
+
+		uint32_t sock;
+		struct sockaddr_in addr;
+		int yes = 1;
+		r_connection *c;
+
+		c = (r_connection*)malloc(sizeof(r_connection));
+
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		memset(&addr, 0, sizeof(struct sockaddr_in));
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(r->conf->cluster_port);
+		addr.sin_addr.s_addr = inet_addr(r->conf->cluster->data);
+
+		setsockopt(sock, SOL_TCP, TCP_NODELAY, &yes, sizeof(yes));
+
+		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+			// do nothing.
+			return;
+		}
+
+		c->sock = sock;
+
+		LIST_ADD(c_list, c);
+	}
+
+	// to indicate this packet from clusters.
+	r->b->d[0] |= 0x08;
+
+	write(((r_connection*)c_list->data)->sock, r->b->d, r->b->len);
+}
+*/
 static int
 _server_loop_mqtt(r_listener *l)
 {
@@ -260,7 +309,6 @@ _server_loop_mqtt(r_listener *l)
 				entry = _create_new_connection(client);
 				mng->c_count++;
 				LIST_ADD(mng->list, entry);
-
 				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &entry->e) != 0) {
 					perror("epoll_ctl");
 					return -1;
@@ -272,11 +320,8 @@ _server_loop_mqtt(r_listener *l)
 				LIST_FIND(entry, mng->list, data, uint32_t);
 				entry->conf = l->conf;
 				entry->b = read_socket(data);
-				//printf("from cluster : %s\n", entry->b->d);
-				//printf("myport : %d\n", conf->port);
 				parse_mqtt(entry);
-
-				free(entry->b);
+				free_buf(entry->b);
 			}
 		}
 	}
