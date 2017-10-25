@@ -175,7 +175,7 @@ _create_new_connection(int sock)
 
 	c->sock = sock;
 	c->e.events = EPOLLIN | EPOLLET;
-	c->e.data.fd = sock;
+	c->e.data.ptr = c;
 
 	return c;
 }
@@ -279,17 +279,24 @@ handle_clusters(r_connection *r)
 	write(((r_connection*)c_list->data)->sock, r->b->d, r->b->len);
 }
 */
+
+typedef struct _cluster_node {
+	int sock;
+	uint8_t myself;
+	rat_str name;
+	int port;
+} cluster_node;
+
 static int
 _server_loop_mqtt(r_listener *l)
 {
 	r_connection *entry;
 	r_mqtt_manager *mng;
 	char read_buffer[1024];
-	uint32_t i, nfds, c_len, client, data;
+	uint32_t i, nfds, c_len, client;
 
 	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
 	memset(mng, 0, sizeof(r_mqtt_manager));
-	LIST_INIT(mng->list);
 
 	while (1) {
 		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
@@ -308,18 +315,16 @@ _server_loop_mqtt(r_listener *l)
 
 				entry = _create_new_connection(client);
 				mng->c_count++;
-				LIST_ADD(mng->list, entry);
-				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, client, &entry->e) != 0) {
+				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
 					perror("epoll_ctl");
 					return -1;
 				}
 
-			} else {
+			} else if (l->e_ret[i].events & EPOLLIN) {
 
-				data = l->e_ret[i].data.fd;
-				LIST_FIND(entry, mng->list, data, uint32_t);
+				entry = l->e_ret[i].data.ptr;
 				entry->conf = l->conf;
-				entry->b = read_socket(data);
+				entry->b = read_socket(entry->sock);
 				parse_mqtt(entry);
 				free_buf(entry->b);
 			}
