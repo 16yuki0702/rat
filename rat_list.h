@@ -79,4 +79,13 @@ typedef struct _list {
 		}											\
 	} while (0)
 
+#define LIST_COUNT(count, list)										\
+	do {												\
+		r_list *e = list;									\
+		while (e) {										\
+			e = e->next;									\
+			count++;									\
+		}											\
+	} while (0)
+
 #endif

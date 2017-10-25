@@ -280,12 +280,38 @@ handle_clusters(r_connection *r)
 }
 */
 
-typedef struct _cluster_node {
-	int sock;
-	uint8_t myself;
-	rat_str name;
-	int port;
-} cluster_node;
+cluster_node **
+setup_clusters(rat_conf *conf)
+{
+	int i = 0, count = 0;
+	char *s = ":";
+	r_list *list;
+	rat_str *tmp;
+	cluster_node **clusters, *cluster;
+	LIST_COUNT(count, conf->clusters);
+
+	list = conf->clusters;
+
+	clusters = (cluster_node**)malloc(sizeof(cluster_node*) * count);
+	memset(clusters, 0, sizeof(clusters));
+
+	while (list) {
+		tmp = (rat_str*)list->data;
+
+		cluster = (cluster_node*)malloc(sizeof(cluster_node));
+		memset(cluster, 0, sizeof(cluster_node));
+
+		cluster->name = make_rat_str(strtok(tmp->data, s));
+		cluster->port = atoi(strtok(NULL, s));
+		cluster->sock = -1;
+		cluster->myself = (!strcmp(cluster->name->data, conf->host->data) && cluster->port == conf->port) ? true : false;
+		clusters[i] = cluster;
+		
+		list = list->next;
+	}
+
+	return clusters;
+}
 
 static int
 _server_loop_mqtt(r_listener *l)
@@ -294,9 +320,12 @@ _server_loop_mqtt(r_listener *l)
 	r_mqtt_manager *mng;
 	char read_buffer[1024];
 	uint32_t i, nfds, c_len, client;
+	cluster_node **clusters;
 
 	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
 	memset(mng, 0, sizeof(r_mqtt_manager));
+
+	clusters = setup_clusters(l->conf);
 
 	while (1) {
 		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
@@ -314,6 +343,7 @@ _server_loop_mqtt(r_listener *l)
 				}
 
 				entry = _create_new_connection(client);
+				entry->clusters = clusters;
 				mng->c_count++;
 				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
 					perror("epoll_ctl");

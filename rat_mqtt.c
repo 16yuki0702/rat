@@ -191,14 +191,12 @@ parse_mqtt(r_connection *c)
 				ph = scan_data16(&p->password, ph);
 			}
 			c->handle_mqtt = handle_connack;
-			//send_connack(sock, p);
 			break;
 		case MQTT_SUBSCRIBE:
 			p->message_id = get_uint16(ph);
 			ph += 2;
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
-			//handle_subscribe(sock, p, c);
 			c->handle_mqtt = handle_subscribe;
 			break;
 		case MQTT_PUBLISH:
@@ -212,7 +210,6 @@ parse_mqtt(r_connection *c)
 			p->payload.d = ph;
 			p->payload.l = (size_t)(end - ph);
 			c->handle_mqtt = handle_publish;
-			//handle_publish(sock, p, c);
 			break;
 		case MQTT_DISCONNECT:
 			close(sock);
