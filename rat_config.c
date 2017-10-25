@@ -14,8 +14,6 @@ _dump_config(void)
 	LOG_DEBUG(("log_level : %d",	conf->log_level));
 	LOG_DEBUG(("redis_server : %d",	conf->redis_server->data));
 	LOG_DEBUG(("redis_port : %d",	conf->redis_port));
-	LOG_DEBUG(("cluster : %d",	conf->cluster->data));
-	LOG_DEBUG(("cluster_port : %d",	conf->cluster_port));
 }
 
 static void
@@ -76,6 +74,7 @@ _read_config(char *path)
 	FILE *f;
 	char *token, *cptr;
 	char buf[1024];
+	rat_str *entry;
 
 	conf = (rat_conf *)malloc(sizeof(rat_conf));
 	memset(conf, 0, sizeof(conf));
@@ -103,10 +102,12 @@ _read_config(char *path)
 			_conf_handler_int(&conf->redis_port, strtok_r(NULL, "", &cptr));
 		} else if (!strcmp(token, "cluster_enable")) {
 			_conf_handler_uint16(&conf->cluster_enable, strtok_r(NULL, "", &cptr));
-		} else if (!strcmp(token, "cluster")) {
-			_conf_handler_string(&conf->cluster, strtok_r(NULL, "", &cptr));
-		} else if (!strcmp(token, "cluster_port")) {
-			_conf_handler_int(&conf->cluster_port, strtok_r(NULL, "", &cptr));
+		} else if (!strcmp(token, "clusters")) {
+			if (!conf->clusters) {
+				LIST_INIT(conf->clusters);
+			}
+			entry = make_rat_str(cptr);
+			LIST_ADD(conf->clusters, entry);
 		}
 	}
 }

@@ -68,4 +68,15 @@ typedef struct _list {
 		}											\
 	} while (0)
 
+#define LIST_DUMP_RAT_STR(list)										\
+	do {												\
+		r_list *e = list;									\
+		while (e) {										\
+			if (e->data) {									\
+				printf("list data %s\n", ((rat_str*)e->data)->data);			\
+			}										\
+			e = e->next;									\
+		}											\
+	} while (0)
+
 #endif

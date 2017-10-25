@@ -7,6 +7,7 @@
 #include <string.h>
 #include "rat_string.h"
 #include "rat_log.h"
+#include "rat_list.h"
 
 typedef struct {
 	uint16_t port;
@@ -18,8 +19,7 @@ typedef struct {
 	rat_str *redis_server;
 	int redis_port;
 	uint16_t cluster_enable;
-	rat_str *cluster;
-	int cluster_port;
+	r_list *clusters;
 } rat_conf;
 
 typedef struct {
