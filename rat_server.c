@@ -111,17 +111,20 @@ _create_event(int sock)
 }
 
 static r_listener*
-_create_listener(rat_conf *conf)
+_create_listener(rat_conf *conf, uint8_t type)
 {
-	int on = 1;
+	int on = 1, port;
 	r_listener *l;
+
+	port = (type == LISTENER_CLUSTER) ? (conf->port + 1) : conf->port;
 
 	l = (r_listener*)malloc(sizeof(r_listener));
 
 	l->sock = socket(AF_INET, SOCK_STREAM, 0);
 	l->addr.sin_family = AF_INET;
-	l->addr.sin_port = htons(conf->port);
+	l->addr.sin_port = htons(port);
 	l->addr.sin_addr.s_addr = INADDR_ANY;
+	l->type = type;
 	ioctl(l->sock, FIONBIO, &on);
 	ioctl(l->sock, FD_CLOEXEC, &on);
 
@@ -280,19 +283,22 @@ handle_clusters(r_connection *r)
 }
 */
 
-cluster_node **
+cluster_list *
 setup_clusters(rat_conf *conf)
 {
 	int i = 0, count = 0;
 	char *s = ":";
 	r_list *list;
 	rat_str *tmp;
-	cluster_node **clusters, *cluster;
+	cluster_node **nodes, *cluster;
+	cluster_list *clusters;
 	LIST_COUNT(count, conf->clusters);
 
 	list = conf->clusters;
 
-	clusters = (cluster_node**)malloc(sizeof(cluster_node*) * count);
+	nodes = (cluster_node**)malloc(sizeof(cluster_node*) * count);
+	memset(nodes, 0, sizeof(nodes));
+	clusters = (cluster_list*)malloc(sizeof(cluster_list));
 	memset(clusters, 0, sizeof(clusters));
 
 	while (list) {
@@ -305,10 +311,13 @@ setup_clusters(rat_conf *conf)
 		cluster->port = atoi(strtok(NULL, s));
 		cluster->sock = -1;
 		cluster->myself = (!strcmp(cluster->name->data, conf->host->data) && cluster->port == conf->port) ? true : false;
-		clusters[i] = cluster;
+		nodes[i] = cluster;
 		
 		list = list->next;
 	}
+
+	clusters->nodes = nodes;
+	clusters->count = count;
 
 	return clusters;
 }
@@ -320,12 +329,14 @@ _server_loop_mqtt(r_listener *l)
 	r_mqtt_manager *mng;
 	char read_buffer[1024];
 	uint32_t i, nfds, c_len, client;
-	cluster_node **clusters;
+	cluster_list *clusters = NULL;
 
 	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
 	memset(mng, 0, sizeof(r_mqtt_manager));
 
-	clusters = setup_clusters(l->conf);
+	if (l->conf->cluster_enable) {
+		clusters = setup_clusters(l->conf);
+	}
 
 	while (1) {
 		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
@@ -411,7 +422,7 @@ int
 start_server_mqtt(rat_conf *conf)
 {
 	r_listener *l;
-	l = _create_listener(conf);
+	l = _create_listener(conf, LISTENER_SERVER);
 
 	return _server_loop_mqtt(l);
 }

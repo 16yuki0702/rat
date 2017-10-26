@@ -26,6 +26,11 @@ typedef struct _cluster_node {
 } cluster_node;
 
 typedef struct {
+	cluster_node **nodes;
+	int count;
+} cluster_list;
+
+typedef struct {
 	uint8_t cmd:4;
 	uint8_t dup:1;
 	uint8_t qos:2;
@@ -52,7 +57,7 @@ typedef struct _r_connection {
 	rat_conf *conf;
 	buf *b;
 	r_mqtt_packet *p;
-	cluster_node **clusters;
+	cluster_list *clusters;
 	void (*handle_mqtt)(struct _r_connection *c);
 } r_connection;
 

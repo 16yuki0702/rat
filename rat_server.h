@@ -17,6 +17,9 @@
 #define NEVENTS 16
 #define BUF_SIZE			1024
 
+#define LISTENER_SERVER	0x01
+#define LISTENER_CLUSTER 0x02
+
 typedef struct {
 	rat_conf *conf;
 	int (*start_server)(rat_conf *conf);
@@ -45,6 +48,7 @@ typedef struct {
 	int sock;
 	struct sockaddr_in addr;
 	rat_conf *conf;
+	uint8_t type;
 } r_listener;
 
 typedef struct {
