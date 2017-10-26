@@ -165,7 +165,7 @@ _create_listener(rat_conf *conf, uint8_t type)
 }
 
 static r_connection *
-_create_new_connection(int sock)
+_create_new_connection(int sock, uint8_t type, uint32_t flags)
 {
 	r_connection *c;
 	int on = 1;
@@ -177,7 +177,8 @@ _create_new_connection(int sock)
 	ioctl(sock, FD_CLOEXEC, &on);
 
 	c->sock = sock;
-	c->e.events = EPOLLIN | EPOLLET;
+	c->type = type;
+	c->e.events |= flags;
 	c->e.data.ptr = c;
 
 	return c;
@@ -237,54 +238,9 @@ _server_loop(rat_connection *conn)
 
 	return 0;
 }
-/*
-static void
-handle_clusters(r_connection *r)
-{
-	// if DUP bit is set. it indicate this packet send from clusters.
-	// (in fact PUBLISH is not set this flag to 1.
-	if ((r->b->d[0] & 0x08) >> 3) {
-		return;
-	}
-
-	if (c_list == NULL) {
-		LIST_INIT(c_list);
-
-		uint32_t sock;
-		struct sockaddr_in addr;
-		int yes = 1;
-		r_connection *c;
-
-		c = (r_connection*)malloc(sizeof(r_connection));
-
-		sock = socket(AF_INET, SOCK_STREAM, 0);
-		memset(&addr, 0, sizeof(struct sockaddr_in));
-
-		addr.sin_family = AF_INET;
-		addr.sin_port = htons(r->conf->cluster_port);
-		addr.sin_addr.s_addr = inet_addr(r->conf->cluster->data);
-
-		setsockopt(sock, SOL_TCP, TCP_NODELAY, &yes, sizeof(yes));
-
-		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-			// do nothing.
-			return;
-		}
-
-		c->sock = sock;
-
-		LIST_ADD(c_list, c);
-	}
-
-	// to indicate this packet from clusters.
-	r->b->d[0] |= 0x08;
-
-	write(((r_connection*)c_list->data)->sock, r->b->d, r->b->len);
-}
-*/
 
 void
-open_clusters(cluster_list *clusters)
+open_clusters(r_mqtt_manager *mng, cluster_list *clusters)
 {
 	cluster_node *cluster;
 	int i, sock, on = 1;
@@ -364,16 +320,14 @@ setup_clusters(rat_conf *conf)
 }
 
 void
-mqtt_handler(r_listener *l, cluster_list *clusters)
+mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 {
 	r_connection *entry;
-	r_mqtt_manager *mng;
 	uint32_t i, nfds, c_len, client;
 
-	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
-	memset(mng, 0, sizeof(r_mqtt_manager));
-
-	open_clusters(clusters);
+	if (l->type == LISTENER_SERVER) {
+		open_clusters(mng, clusters);
+	}
 
 	nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, 1000);
 	for (i = 0; i < nfds; i++) {
@@ -385,9 +339,11 @@ mqtt_handler(r_listener *l, cluster_list *clusters)
 				exit(-1);
 			}
 
-			entry = _create_new_connection(client);
+			entry = _create_new_connection(client, LISTENER_SERVER, EPOLLIN | EPOLLET);
 			entry->clusters = clusters;
 			mng->c_count++;
+			LIST_ADD(mng->connection_list, entry);
+
 			if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
 				perror("epoll_ctl");
 				exit(-1);
@@ -425,6 +381,11 @@ _server_loop_mqtt(r_listener *l)
 {
 	cluster_list *clusters = NULL;
 	r_listener *cl = NULL;
+	r_mqtt_manager *mng;
+
+	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
+	memset(mng, 0, sizeof(r_mqtt_manager));
+	LIST_INIT(mng->connection_list);
 
 	if (l->conf->cluster_enable) {
 		clusters = setup_clusters(l->conf);
@@ -432,8 +393,8 @@ _server_loop_mqtt(r_listener *l)
 	}
 
 	while (true) {
-		mqtt_handler(l, clusters);
-		mqtt_handler(cl, clusters);
+		mqtt_handler(mng, l, clusters);
+		//mqtt_handler(mng, cl, clusters);
 	}
 
 	close(l->sock);

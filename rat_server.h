@@ -52,9 +52,8 @@ typedef struct {
 } r_listener;
 
 typedef struct {
-	r_list *list;
+	r_list *connection_list;
 	uint32_t c_count;
-	r_listener listener;
 } r_mqtt_manager;
 
 extern int start_server_http(rat_conf *conf);
