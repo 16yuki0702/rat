@@ -12,7 +12,7 @@ _dump_config(void)
 	LOG_DEBUG(("backlog : %d",	conf->backlog));
 	LOG_DEBUG(("socket_reuse : %d",	conf->socket_reuse));
 	LOG_DEBUG(("log_level : %d",	conf->log_level));
-	LOG_DEBUG(("redis_server : %d",	conf->redis_server->data));
+	LOG_DEBUG(("redis_server : %s",	conf->redis_server->data));
 	LOG_DEBUG(("redis_port : %d",	conf->redis_port));
 }
 

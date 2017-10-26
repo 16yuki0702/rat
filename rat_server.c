@@ -283,6 +283,47 @@ handle_clusters(r_connection *r)
 }
 */
 
+void
+open_clusters(cluster_list *clusters)
+{
+	cluster_node *cluster;
+	int i, sock, on = 1;
+	struct sockaddr_in addr;
+
+	for (i = 0; i < clusters->count; i++) {
+		cluster = clusters->nodes[i];
+
+		if (cluster->myself) {
+			continue;
+		}
+
+		if (cluster->sock != -1) {
+			continue;
+		}
+
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+		memset(&addr, 0, sizeof(struct sockaddr_in));
+
+		addr.sin_family = AF_INET;
+		addr.sin_port = htons(cluster->port + 1);
+		addr.sin_addr.s_addr = inet_addr(cluster->name->data);
+
+		ioctl(sock, FIONBIO, &on);
+		ioctl(sock, FD_CLOEXEC, &on);
+		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+
+		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+			printf("could not connect to %s:%d\n", cluster->name->data, cluster->port + 1);
+			close(sock);
+			continue;
+		}
+
+		printf("connect to %s:%d\n", cluster->name->data, cluster->port + 1);
+
+		cluster->sock = sock;
+	}
+}
+
 cluster_list *
 setup_clusters(rat_conf *conf)
 {
@@ -322,70 +363,77 @@ setup_clusters(rat_conf *conf)
 	return clusters;
 }
 
-static int
-_server_loop_mqtt(r_listener *l)
+void
+mqtt_handler(r_listener *l, cluster_list *clusters)
 {
 	r_connection *entry;
 	r_mqtt_manager *mng;
-	char read_buffer[1024];
 	uint32_t i, nfds, c_len, client;
-	cluster_list *clusters = NULL;
 
 	mng = (r_mqtt_manager*)malloc(sizeof(r_mqtt_manager));
 	memset(mng, 0, sizeof(r_mqtt_manager));
 
+	open_clusters(clusters);
+
+	nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, 1000);
+	for (i = 0; i < nfds; i++) {
+
+		if (l->e_ret[i].data.fd == l->e.data.fd) {
+			c_len = sizeof(l->addr);
+			if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
+				LOG_ERROR(("failed open socket."));
+				exit(-1);
+			}
+
+			entry = _create_new_connection(client);
+			entry->clusters = clusters;
+			mng->c_count++;
+			if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
+				perror("epoll_ctl");
+				exit(-1);
+			}
+
+		} else if (l->e_ret[i].events & EPOLLIN) {
+
+			entry = l->e_ret[i].data.ptr;
+			entry->conf = l->conf;
+			entry->b = read_socket(entry->sock);
+			parse_mqtt(entry);
+			entry->e.events = EPOLLOUT | EPOLLET;
+			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+				perror("epoll_ctl");
+				exit(-1);
+			}
+
+		} else if (l->e_ret[i].events & EPOLLOUT) {
+			
+			entry = l->e_ret[i].data.ptr;
+			entry->handle_mqtt(entry);
+			entry->e.events = EPOLLIN | EPOLLET;
+			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+				perror("epoll_ctl");
+				exit(-1);
+			}
+			free_buf(entry->b);
+			free(entry->p);
+		}
+	}
+}
+
+static int
+_server_loop_mqtt(r_listener *l)
+{
+	cluster_list *clusters = NULL;
+	r_listener *cl = NULL;
+
 	if (l->conf->cluster_enable) {
 		clusters = setup_clusters(l->conf);
+		cl = _create_listener(l->conf, LISTENER_CLUSTER);
 	}
 
-	while (1) {
-		if ((nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, -1)) <= 0) {
-			LOG_ERROR(("epoll_wait"));
-			return -1;
-		}
-		for (i = 0; i < nfds; i++) {
-
-			if (l->e_ret[i].data.fd == l->e.data.fd) {
-				memset(read_buffer, 0, sizeof(read_buffer));
-				c_len = sizeof(l->addr);
-				if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
-					LOG_ERROR(("failed open socket."));
-					return -1;
-				}
-
-				entry = _create_new_connection(client);
-				entry->clusters = clusters;
-				mng->c_count++;
-				if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					return -1;
-				}
-
-			} else if (l->e_ret[i].events & EPOLLIN) {
-
-				entry = l->e_ret[i].data.ptr;
-				entry->conf = l->conf;
-				entry->b = read_socket(entry->sock);
-				parse_mqtt(entry);
-				entry->e.events = EPOLLOUT | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					return -1;
-				}
-
-			} else if (l->e_ret[i].events & EPOLLOUT) {
-				
-				entry = l->e_ret[i].data.ptr;
-				entry->handle_mqtt(entry);
-				entry->e.events = EPOLLIN | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					return -1;
-				}
-				free_buf(entry->b);
-				free(entry->p);
-			}
-		}
+	while (true) {
+		mqtt_handler(l, clusters);
+		mqtt_handler(cl, clusters);
 	}
 
 	close(l->sock);
