@@ -245,6 +245,7 @@ open_clusters(r_mqtt_manager *mng, cluster_list *clusters)
 	cluster_node *cluster;
 	int i, sock, on = 1;
 	struct sockaddr_in addr;
+	r_connection *entry;
 
 	for (i = 0; i < clusters->count; i++) {
 		cluster = clusters->nodes[i];
@@ -277,6 +278,8 @@ open_clusters(r_mqtt_manager *mng, cluster_list *clusters)
 		printf("connect to %s:%d\n", cluster->name->data, cluster->port + 1);
 
 		cluster->sock = sock;
+		entry = _create_new_connection(sock, LISTENER_SERVER, EPOLLOUT | EPOLLET);
+		LIST_ADD(mng->connection_list, entry);
 	}
 }
 
