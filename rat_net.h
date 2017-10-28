@@ -58,6 +58,7 @@ typedef struct _r_connection {
 	buf *b;
 	r_mqtt_packet *p;
 	cluster_list *clusters;
+	r_list *request_queue;
 	uint8_t type;
 	void (*handle_mqtt)(struct _r_connection *c);
 } r_connection;

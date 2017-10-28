@@ -14,11 +14,14 @@
 #include "rat_net.h"
 #include "rat_mqtt.h"
 
-#define NEVENTS 16
-#define BUF_SIZE			1024
+#define NEVENTS			16
+#define BUF_SIZE		1024
 
-#define LISTENER_SERVER	0x01
-#define LISTENER_CLUSTER 0x02
+#define LISTENER_SERVER		0x01
+#define LISTENER_CLUSTER	0x02
+
+#define CONNECTION_SERVER	0x01
+#define CONNECTION_CLUSTER	0x02
 
 typedef struct {
 	rat_conf *conf;

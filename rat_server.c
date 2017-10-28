@@ -240,7 +240,7 @@ _server_loop(rat_connection *conn)
 }
 
 void
-open_clusters(r_mqtt_manager *mng, cluster_list *clusters)
+open_clusters(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 {
 	cluster_node *cluster;
 	int i, sock, on = 1;
@@ -278,8 +278,14 @@ open_clusters(r_mqtt_manager *mng, cluster_list *clusters)
 		printf("connect to %s:%d\n", cluster->name->data, cluster->port + 1);
 
 		cluster->sock = sock;
-		entry = _create_new_connection(sock, LISTENER_SERVER, EPOLLOUT | EPOLLET);
+		entry = _create_new_connection(sock, CONNECTION_CLUSTER, EPOLLOUT | EPOLLET);
+		mng->c_count++;
 		LIST_ADD(mng->connection_list, entry);
+
+		if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
+			perror("epoll_ctl");
+			exit(-1);
+		}
 	}
 }
 
@@ -323,26 +329,37 @@ setup_clusters(rat_conf *conf)
 }
 
 void
+add_request_queue(r_connection *entry, buf *b)
+{
+	if (entry->request_queue == NULL) {
+		LIST_INIT(entry->request_queue);
+	}
+
+	LIST_ADD(entry->request_queue, b);
+}
+
+void
 mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 {
 	r_connection *entry;
 	uint32_t i, nfds, c_len, client;
 
 	if (l->type == LISTENER_SERVER) {
-		open_clusters(mng, clusters);
+		open_clusters(mng, l, clusters);
 	}
 
 	nfds = epoll_wait(l->efd, l->e_ret, NEVENTS, 1000);
 	for (i = 0; i < nfds; i++) {
-
+		//printf("event fired\n");
 		if (l->e_ret[i].data.fd == l->e.data.fd) {
+			//printf("listen event fired\n");
 			c_len = sizeof(l->addr);
 			if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
 				LOG_ERROR(("failed open socket."));
 				exit(-1);
 			}
 
-			entry = _create_new_connection(client, LISTENER_SERVER, EPOLLIN | EPOLLET);
+			entry = _create_new_connection(client, CONNECTION_SERVER, EPOLLIN | EPOLLET);
 			entry->clusters = clusters;
 			mng->c_count++;
 			LIST_ADD(mng->connection_list, entry);
@@ -352,8 +369,8 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 				exit(-1);
 			}
 
-		} else if (l->e_ret[i].events & EPOLLIN) {
-
+		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_SERVER) {
+			//printf("in event fired\n");
 			entry = l->e_ret[i].data.ptr;
 			entry->conf = l->conf;
 			entry->b = read_socket(entry->sock);
@@ -364,8 +381,8 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 				exit(-1);
 			}
 
-		} else if (l->e_ret[i].events & EPOLLOUT) {
-			
+		} else if (l->e_ret[i].events & EPOLLOUT && l->type == LISTENER_SERVER) {
+			//printf("out event fired\n");
 			entry = l->e_ret[i].data.ptr;
 			entry->handle_mqtt(entry);
 			entry->e.events = EPOLLIN | EPOLLET;
@@ -396,6 +413,7 @@ _server_loop_mqtt(r_listener *l)
 	}
 
 	while (true) {
+		//printf("server loop\n");
 		mqtt_handler(mng, l, clusters);
 		//mqtt_handler(mng, cl, clusters);
 	}
