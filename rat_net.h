@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -59,6 +60,7 @@ typedef struct _r_connection {
 	r_mqtt_packet *p;
 	cluster_list *clusters;
 	r_list *request_queue;
+	bool ready;
 	uint8_t type;
 	void (*handle_mqtt)(struct _r_connection *c);
 } r_connection;

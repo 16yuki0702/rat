@@ -56,6 +56,7 @@ typedef struct {
 
 typedef struct {
 	r_list *connection_list;
+	r_list *cluster_list;
 	uint32_t c_count;
 } r_mqtt_manager;
 
