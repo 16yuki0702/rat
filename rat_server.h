@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "rat_config.h"
 #include "rat_string.h"
 #include "rat_net.h"

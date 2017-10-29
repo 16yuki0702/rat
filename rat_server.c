@@ -269,13 +269,7 @@ open_clusters(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 		ioctl(sock, FD_CLOEXEC, &on);
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
 
-		if (connect(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-			printf("could not connect to %s:%d\n", cluster->name->data, cluster->port + 1);
-			close(sock);
-			continue;
-		}
-
-		printf("connect to %s:%d\n", cluster->name->data, cluster->port + 1);
+		connect(sock, (struct sockaddr*)&addr, sizeof(addr));
 
 		cluster->sock = sock;
 		entry = _create_new_connection(sock, CONNECTION_CLUSTER, EPOLLOUT | EPOLLET);
@@ -329,29 +323,30 @@ setup_clusters(rat_conf *conf)
 }
 
 void
-process_clusters(r_mqtt_manager *mng)
+process_clusters(r_mqtt_manager *mng, r_connection *entry)
 {
 	buf *b;
-	r_connection *entry = NULL;
-	r_list *list;
+	r_connection *e = NULL;
+	r_list *list, *queue;
 	
 	list = mng->cluster_list;
 	while (list) {
-		entry = (r_connection*)list->data;
-		if (entry == NULL) {
+		e = (r_connection*)list->data;
+		if (e == NULL) {
 			if (list->next == NULL) {
 				break;
 			}
 			list = list->next;
 		}
+		queue = e->request_queue;
 		b = (buf*)malloc(sizeof(buf));
 		memcpy(b->d, entry->b->d, entry->b->len);
 		b->len = entry->b->len;
-		if (entry->request_queue) {
-			LIST_INIT(entry->request_queue);
+		if (queue == NULL) {
+			LIST_INIT(queue);
 		}
-		LIST_ADD(entry->request_queue, b);
-		entry->ready = true;
+		LIST_ADD(queue, b);
+		e->ready = true;
 		
 		list = list->next;
 	}
@@ -391,6 +386,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 		if (l->e_ret[i].data.fd == l->e.data.fd) {
 			c_len = sizeof(l->addr);
 			if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
+				printf("failed open cluster\n");
 				LOG_ERROR(("failed open socket."));
 				exit(-1);
 			}
@@ -411,8 +407,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry->b = read_socket(entry->sock);
 			parse_mqtt(entry);
 			if (conf->cluster_enable && entry->p->cmd ==  MQTT_PUBLISH) {
-				printf("publish to clusters\n");
-				process_clusters(mng);
+				process_clusters(mng, entry);
 			}
 			entry->e.events = EPOLLOUT | EPOLLET;
 			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
@@ -433,8 +428,10 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 				free(entry->p);
 			} else if (entry->type == CONNECTION_CLUSTER) {
 				if (entry->ready == false) {
+					printf("(cluster) not ready\n");
 					continue;
 				}
+				printf("(cluster) ready\n");
 				handle_cluster(entry);
 			}
 		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_CLUSTER) {
