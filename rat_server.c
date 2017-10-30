@@ -344,8 +344,10 @@ process_clusters(r_mqtt_manager *mng, r_connection *entry)
 		b->len = entry->b->len;
 		if (queue == NULL) {
 			LIST_INIT(queue);
+			e->request_queue = queue;
 		}
 		LIST_ADD(queue, b);
+		
 		e->ready = true;
 		
 		list = list->next;
@@ -355,17 +357,20 @@ process_clusters(r_mqtt_manager *mng, r_connection *entry)
 void
 handle_cluster(r_connection *entry)
 {
-	r_list *queue;
+	r_list *queue, *tmp;
 	buf *b;
 	queue = entry->request_queue;
 
 	while (queue) {
 		b = (buf*)queue->data;
 		write(entry->sock, b->d, b->len);
-		free_buf(b);
+		// TODO free buf.
+		//free(b->d);
+		//free(b);
 
+		tmp = queue;
 		queue = queue->next;
-		free(queue->prev);
+		free(tmp);
 	}
 
 	entry->ready = false;
@@ -386,7 +391,6 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 		if (l->e_ret[i].data.fd == l->e.data.fd) {
 			c_len = sizeof(l->addr);
 			if ((client = accept(l->sock, (struct sockaddr *)&l->addr, &c_len)) == -1) {
-				printf("failed open cluster\n");
 				LOG_ERROR(("failed open socket."));
 				exit(-1);
 			}
@@ -427,18 +431,27 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 				free_buf(entry->b);
 				free(entry->p);
 			} else if (entry->type == CONNECTION_CLUSTER) {
-				if (entry->ready == false) {
-					printf("(cluster) not ready\n");
-					continue;
+				if (entry->ready) {
+					handle_cluster(entry);
 				}
-				printf("(cluster) ready\n");
-				handle_cluster(entry);
+				entry->e.events = EPOLLOUT | EPOLLET;
+				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+					perror("epoll_ctl");
+					exit(-1);
+				}
 			}
 		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_CLUSTER) {
 			entry = l->e_ret[i].data.ptr;
 			entry->conf = l->conf;
 			entry->b = read_socket(entry->sock);
-			parse_mqtt(entry);
+			if (entry->b->len > 0) {
+				parse_mqtt(entry);
+			}
+			entry->e.events = EPOLLIN | EPOLLET;
+			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+				perror("epoll_ctl");
+				exit(-1);
+			}
 		}
 	}
 }
@@ -461,7 +474,6 @@ _server_loop_mqtt(r_listener *l)
 	}
 
 	while (true) {
-		//printf("server loop\n");
 		mqtt_handler(mng, l, clusters);
 		mqtt_handler(mng, cl, clusters);
 	}
