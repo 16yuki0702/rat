@@ -394,12 +394,10 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 				LOG_ERROR(("failed open socket."));
 				exit(-1);
 			}
-
 			entry = _create_new_connection(client, CONNECTION_SERVER, EPOLLIN | EPOLLET);
 			entry->clusters = clusters;
 			mng->c_count++;
 			LIST_ADD(mng->connection_list, entry);
-
 			if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
 				perror("epoll_ctl");
 				exit(-1);
@@ -446,12 +444,28 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry->b = read_socket(entry->sock);
 			if (entry->b->len > 0) {
 				parse_mqtt(entry);
+				entry->e.events = EPOLLOUT | EPOLLET;
+				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+					perror("epoll_ctl");
+					exit(-1);
+				}
+			} else {
+				entry->e.events = EPOLLIN | EPOLLET;
+				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+					perror("epoll_ctl");
+					exit(-1);
+				}
 			}
+		} else if (l->e_ret[i].events & EPOLLOUT && l->type == LISTENER_CLUSTER) {
+			entry = l->e_ret[i].data.ptr;
+			entry->handle_mqtt(entry);
 			entry->e.events = EPOLLIN | EPOLLET;
 			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
 				perror("epoll_ctl");
 				exit(-1);
 			}
+			free_buf(entry->b);
+			free(entry->p);
 		}
 	}
 }
