@@ -377,6 +377,25 @@ handle_cluster(r_connection *entry)
 }
 
 void
+add_event(r_listener *l, r_connection *entry)
+{
+	if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
+		perror("epoll_ctl");
+		exit(-1);
+	}
+}
+
+void
+modify_event(r_listener *l, r_connection *entry, int flags)
+{
+	entry->e.events = flags;
+	if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
+		perror("epoll_ctl");
+		exit(-1);
+	}
+}
+
+void
 mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 {
 	r_connection *entry;
@@ -398,11 +417,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry->clusters = clusters;
 			mng->c_count++;
 			LIST_ADD(mng->connection_list, entry);
-			if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
-				perror("epoll_ctl");
-				exit(-1);
-			}
-
+			add_event(l, entry);
 		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_SERVER) {
 			entry = l->e_ret[i].data.ptr;
 			entry->conf = l->conf;
@@ -411,32 +426,19 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			if (conf->cluster_enable && entry->p->cmd ==  MQTT_PUBLISH) {
 				process_clusters(mng, entry);
 			}
-			entry->e.events = EPOLLOUT | EPOLLET;
-			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-				perror("epoll_ctl");
-				exit(-1);
-			}
-
+			modify_event(l, entry, EPOLLOUT | EPOLLET);
 		} else if (l->e_ret[i].events & EPOLLOUT && l->type == LISTENER_SERVER) {
 			entry = l->e_ret[i].data.ptr;
 			if (entry->type == CONNECTION_SERVER) {
 				entry->handle_mqtt(entry);
-				entry->e.events = EPOLLIN | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					exit(-1);
-				}
+				modify_event(l, entry, EPOLLIN | EPOLLET);
 				free_buf(entry->b);
 				free(entry->p);
 			} else if (entry->type == CONNECTION_CLUSTER) {
 				if (entry->ready) {
 					handle_cluster(entry);
 				}
-				entry->e.events = EPOLLOUT | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					exit(-1);
-				}
+				modify_event(l, entry, EPOLLOUT | EPOLLET);
 			}
 		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_CLUSTER) {
 			entry = l->e_ret[i].data.ptr;
@@ -444,26 +446,14 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry->b = read_socket(entry->sock);
 			if (entry->b->len > 0) {
 				parse_mqtt(entry);
-				entry->e.events = EPOLLOUT | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					exit(-1);
-				}
+				modify_event(l, entry, EPOLLOUT | EPOLLET);
 			} else {
-				entry->e.events = EPOLLIN | EPOLLET;
-				if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-					perror("epoll_ctl");
-					exit(-1);
-				}
+				modify_event(l, entry, EPOLLIN | EPOLLET);
 			}
 		} else if (l->e_ret[i].events & EPOLLOUT && l->type == LISTENER_CLUSTER) {
 			entry = l->e_ret[i].data.ptr;
 			entry->handle_mqtt(entry);
-			entry->e.events = EPOLLIN | EPOLLET;
-			if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {
-				perror("epoll_ctl");
-				exit(-1);
-			}
+			modify_event(l, entry, EPOLLIN | EPOLLET);
 			free_buf(entry->b);
 			free(entry->p);
 		}
