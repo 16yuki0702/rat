@@ -25,6 +25,23 @@
 #define CONNECTION_SERVER	0x01
 #define CONNECTION_CLUSTER	0x02
 
+#define ADD_EVENT(l, entry)								\
+	do {										\
+		if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {	\
+			perror("epoll_ctl");						\
+			exit(-1);							\
+		}									\
+	} while (0)	
+		
+#define MODIFY_EVENT(l, entry, flags)							\
+	do {										\
+		entry->e.events = flags;						\
+		if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {	\
+			perror("epoll_ctl");						\
+			exit(-1);							\
+		}									\
+	} while (0)	
+
 typedef struct {
 	rat_conf *conf;
 	int (*start_server)(rat_conf *conf);
