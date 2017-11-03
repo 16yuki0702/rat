@@ -88,4 +88,15 @@ typedef struct _list {
 		}											\
 	} while (0)
 
+#define LIST_FREE(list)											\
+	do {												\
+		r_list *e, *tmp;									\
+		e = list;										\
+		while (e) {										\
+			tmp = e;									\
+			free(e);									\
+			e = tmp->next;									\
+		}											\
+	} while (0)
+
 #endif
