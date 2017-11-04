@@ -57,6 +57,27 @@ typedef struct _list {
 		entry = e->data;									\
 	} while (0)
 
+#define LIST_DELETE(entry, list, data, type)								\
+	do {												\
+		r_list *e = list;									\
+		while (e) {										\
+			if (*(type*)e->data == data) {							\
+				e->prev->next = e->next;						\
+				e->next->prev = e->prev;						\
+				free(e);								\
+				break;									\
+			} else {									\
+				if (e->next) {								\
+					e = e->next;							\
+				} else {								\
+					e = NULL;							\
+					break;								\
+				}									\
+			}										\
+		}											\
+		entry = e->data;									\
+	} while (0)
+
 #define LIST_DUMP(list, type)										\
 	do {												\
 		r_list *e = list;									\
