@@ -456,11 +456,14 @@ _server_loop_mqtt(r_listener *l)
 		clusters = setup_clusters(l->conf);
 		cl = _create_listener(l->conf, LISTENER_CLUSTER);
 		LIST_INIT(mng->cluster_list);
-	}
-
-	while (true) {
-		mqtt_handler(mng, l, clusters);
-		mqtt_handler(mng, cl, clusters);
+		while (true) {
+			mqtt_handler(mng, l, clusters);
+			mqtt_handler(mng, cl, clusters);
+		}
+	} else {
+		while (true) {
+			mqtt_handler(mng, l, clusters);
+		}
 	}
 
 	close(l->sock);
