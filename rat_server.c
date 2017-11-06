@@ -441,6 +441,20 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 	}
 }
 
+void
+cleanup_manager(r_mqtt_manager *mng)
+{
+	LIST_FREE(mng->connection_list);
+	LIST_FREE(mng->cluster_list);
+}
+
+void
+cleanup_listener(r_listener *l)
+{
+	close(l->sock);
+	free(l);
+}
+
 static int
 _server_loop_mqtt(r_listener *l)
 {
@@ -466,9 +480,11 @@ _server_loop_mqtt(r_listener *l)
 		}
 	}
 
-	close(l->sock);
-
-	free(l);
+	if (l->conf->cluster_enable) {
+		cleanup_listener(cl);
+	}
+	cleanup_listener(l);
+	cleanup_manager(mng);
 
 	return 0;
 }
