@@ -36,7 +36,7 @@
 #define MODIFY_EVENT(l, entry, flags)							\
 	do {										\
 		entry->e.events = flags;						\
-		if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {	\
+		if (epoll_ctl(l->efd, EPOLL_CTL_MOD, entry->sock, &entry->e) != 0) {	\
 			perror("epoll_ctl");						\
 			exit(-1);							\
 		}									\
