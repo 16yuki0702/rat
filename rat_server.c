@@ -413,7 +413,8 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			if (entry->type == CONNECTION_SERVER) {
 				entry->handle_mqtt(entry);
 				MODIFY_EVENT(l, entry, EPOLLIN | EPOLLET);
-				free_buf(entry->b);
+				//free_buf(entry->b);
+				BUF_FREE(entry->b);
 				free(entry->p);
 			} else if (entry->type == CONNECTION_CLUSTER) {
 				if (entry->ready) {

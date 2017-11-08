@@ -14,6 +14,14 @@
 
 #define BUF_SIZE			1024
 
+#define BUF_FREE(b) 			\
+	do {				\
+		if (b && b->d) {	\
+			free(b->d);	\
+			free(b);	\
+		}			\
+	} while (0)
+
 typedef struct {
 	uint8_t *d;
 	int len;
