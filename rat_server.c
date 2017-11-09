@@ -382,7 +382,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 	r_connection *entry;
 	uint32_t i, nfds, c_len, client;
 
-	if (l->type == LISTENER_SERVER) {
+	if (conf->cluster_enable && l->type == LISTENER_SERVER) {
 		open_clusters(mng, l, clusters);
 	}
 
@@ -413,7 +413,6 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			if (entry->type == CONNECTION_SERVER) {
 				entry->handle_mqtt(entry);
 				MODIFY_EVENT(l, entry, EPOLLIN | EPOLLET);
-				//free_buf(entry->b);
 				BUF_FREE(entry->b);
 				free(entry->p);
 			} else if (entry->type == CONNECTION_CLUSTER) {
