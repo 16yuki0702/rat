@@ -435,7 +435,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry = l->e_ret[i].data.ptr;
 			entry->handle_mqtt(entry);
 			MODIFY_EVENT(l, entry, EPOLLIN | EPOLLET);
-			free_buf(entry->b);
+			BUF_FREE(entry->b);
 			free(entry->p);
 		}
 	}
