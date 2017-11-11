@@ -275,11 +275,7 @@ open_clusters(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 		entry = _create_new_connection(sock, CONNECTION_CLUSTER, EPOLLOUT | EPOLLET);
 		mng->c_count++;
 		LIST_ADD(mng->cluster_list, entry);
-
-		if (epoll_ctl(l->efd, EPOLL_CTL_ADD, entry->sock, &entry->e) != 0) {
-			perror("epoll_ctl");
-			exit(-1);
-		}
+		ADD_EVENT(l, entry);
 	}
 }
 
@@ -404,7 +400,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			entry->conf = l->conf;
 			entry->b = read_socket(entry->sock);
 			parse_mqtt(entry);
-			if (conf->cluster_enable && entry->p->cmd ==  MQTT_PUBLISH) {
+			if (conf->cluster_enable && entry->p->cmd == MQTT_PUBLISH) {
 				process_clusters(mng, entry);
 			}
 			MODIFY_EVENT(l, entry, EPOLLOUT | EPOLLET);
