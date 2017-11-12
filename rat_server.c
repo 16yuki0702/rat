@@ -395,6 +395,7 @@ mqtt_handler(r_mqtt_manager *mng, r_listener *l, cluster_list *clusters)
 			mng->c_count++;
 			LIST_ADD(mng->connection_list, entry);
 			ADD_EVENT(l, entry);
+			entry->mng = mng;
 		} else if (l->e_ret[i].events & EPOLLIN && l->type == LISTENER_SERVER) {
 			entry = l->e_ret[i].data.ptr;
 			entry->conf = l->conf;

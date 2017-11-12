@@ -40,6 +40,12 @@ typedef struct {
 } cluster_list;
 
 typedef struct {
+	r_list *connection_list;
+	r_list *cluster_list;
+	uint32_t c_count;
+} r_mqtt_manager;
+
+typedef struct {
 	uint8_t cmd:4;
 	uint8_t dup:1;
 	uint8_t qos:2;
@@ -68,6 +74,7 @@ typedef struct _r_connection {
 	r_mqtt_packet *p;
 	cluster_list *clusters;
 	r_list *request_queue;
+	r_mqtt_manager *mng;
 	bool ready;
 	uint8_t type;
 	void (*handle_mqtt)(struct _r_connection *c);

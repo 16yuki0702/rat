@@ -73,12 +73,6 @@ typedef struct {
 	uint8_t type;
 } r_listener;
 
-typedef struct {
-	r_list *connection_list;
-	r_list *cluster_list;
-	uint32_t c_count;
-} r_mqtt_manager;
-
 extern int start_server_http(rat_conf *conf);
 extern int start_server_mqtt(rat_conf *conf);
 extern void initialize_server(rat_conf *conf);
