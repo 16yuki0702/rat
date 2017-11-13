@@ -145,6 +145,22 @@ handle_publish(r_connection *c)
 }
 
 void
+handle_disconnect(r_connection *c)
+{
+	uint8_t *res;
+	uint32_t len;
+
+	res = (uint8_t*)malloc(sizeof(uint8_t));
+	len = add_mqtt_header(res, MQTT_SUBACK, 0, 0, 0);
+
+	write(c->sock, res, len);
+
+	free(res);
+
+	//LIST_DELETE(c, c->mng->connection_list, c, int);
+}
+
+void
 parse_mqtt(r_connection *c)
 {
 	r_mqtt_packet *p;
