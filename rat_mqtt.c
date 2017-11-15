@@ -228,7 +228,7 @@ parse_mqtt(r_connection *c)
 			c->handle_mqtt = handle_publish;
 			break;
 		case MQTT_DISCONNECT:
-			close(sock);
+			c->handle_mqtt = handle_disconnect;
 			break;
 		default:
 			send(sock, "test", 4, 0);
