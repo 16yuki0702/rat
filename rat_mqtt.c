@@ -151,7 +151,7 @@ handle_disconnect(r_connection *c)
 	uint32_t len;
 
 	res = (uint8_t*)malloc(sizeof(uint8_t));
-	len = add_mqtt_header(res, MQTT_SUBACK, 0, 0, 0);
+	len = add_mqtt_header(res, MQTT_DISCONNECT, 0, 0, 0);
 
 	write(c->sock, res, len);
 
