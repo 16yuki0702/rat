@@ -227,6 +227,8 @@ parse_mqtt(r_connection *c)
 			p->payload.l = (size_t)(end - ph);
 			c->handle_mqtt = handle_publish;
 			break;
+		case MQTT_UNSUBSCRIBE:
+			break;
 		case MQTT_DISCONNECT:
 			c->handle_mqtt = handle_disconnect;
 			break;
