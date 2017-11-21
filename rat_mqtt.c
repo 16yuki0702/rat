@@ -167,6 +167,12 @@ handle_unsubscribe(r_connection *c)
 }
 
 void
+handle_unsuback(r_connection *c)
+{
+
+}
+
+void
 parse_mqtt(r_connection *c)
 {
 	r_mqtt_packet *p;
