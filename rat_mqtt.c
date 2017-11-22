@@ -240,6 +240,7 @@ parse_mqtt(r_connection *c)
 			c->handle_mqtt = handle_publish;
 			break;
 		case MQTT_UNSUBSCRIBE:
+			c->handle_mqtt = handle_unsubscribe;
 			break;
 		case MQTT_UNSUBACK:
 			break;
